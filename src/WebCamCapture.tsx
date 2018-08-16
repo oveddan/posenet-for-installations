@@ -30,7 +30,7 @@ class WebCamCapture extends React.Component<IWebCamCaptureProps> {
   }
 
   public render() {
-    return (<video playsinline={true} className="video" ref={this.videoRef} />);
+    return (<video playsInline className="video" ref={this.videoRef} />);
   }
 }
 

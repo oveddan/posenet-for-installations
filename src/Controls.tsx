@@ -1,9 +1,140 @@
 import * as React from 'react';
 
-import { Typography } from '../node_modules/@material-ui/core';
+import { Button, TextField, Typography } from '@material-ui/core';
+import { IConnectionState } from './Connection';
 import { OutputStride } from "./types";
 import { SliderControl, SwitchControl } from './UI';
 
+interface IConnectionControls {
+  connectTo?: string
+}
+
+class ConnectionControls extends React.Component<{
+  controls: IConnectionControls,
+  connection: IConnectionState,
+  connect: () => void,
+  disconnect: () => void,
+  updateControls: (key: keyof IControls, controls: IConnectionControls) => void
+}> {
+  public render() {
+    const { controls, connection : { status } } = this.props;
+    return (
+      <div>
+       {(status === 'closed') && (
+         <div>
+            <TextField
+              label="connect to"
+              value={controls.connectTo}
+              onChange={this.connectToChanged}
+              margin="normal"
+            />
+            <Button variant="contained" color="primary" onClick={this.props.connect}>
+              Connect
+            </Button>
+          </div>
+        )}
+        {(status === 'connecting') && (
+          <Typography>
+            {`connecting to ${controls.connectTo}`}
+          </Typography>
+        )}
+        {(status === 'open') && (
+          <div>
+            <Typography>
+              {`connected to ${controls.connectTo}`}
+            </Typography>
+            <Button variant="contained" color="primary" onClick={this.props.disconnect}>
+              Disconnect
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  private connectToChanged: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    this.updateControls('connectTo', e.target.value);
+  }
+
+  private updateControls = (key: keyof IConnectionControls, value: any) => {
+    const newControls: IConnectionControls = {
+      ...this.props.controls,
+      [key]: value
+    };
+
+    this.props.updateControls('connection', newControls);
+  }
+}
+
+interface ICameraControls {
+  capture: boolean
+};
+
+class CameraControls extends React.Component<{
+  controls: ICameraControls,
+  updateControls: (key: keyof IControls, controls: ICameraControls) => void
+}> {
+  public render() {
+    const { controls } = this.props;
+    return (
+      <div>
+        <SwitchControl controls={controls} controlKey='capture'
+          updateControls={this.updateControls} />
+      </div>
+    )
+  }
+
+  private updateControls = (key: keyof ICameraControls, value: any) => {
+    const newControls: ICameraControls = {
+      ...this.props.controls,
+      [key]: value
+    };
+
+    this.props.updateControls('camera', newControls);
+  }
+}
+
+interface IPoseEstimationControls {
+  active: boolean,
+  imageScaleFactor: number,
+  maxPoseDetections: number,
+  nmsRadius: number,
+  outputStride: OutputStride,
+  maxDetections: number
+  scoreThreshold: number,
+};
+
+class PoseEstimationControls extends React.Component<{
+  controls: IPoseEstimationControls,
+  updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
+}> {
+  public render() {
+    const { controls } = this.props;
+    return (
+      <div>
+        <SwitchControl controls={controls} controlKey='active'
+          updateControls={this.updateControls} />
+        <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
+          min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
+        <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
+          min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
+        <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
+          min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
+        <SliderControl key="scoreThreshold" controls={controls} controlKey="scoreThreshold"
+          min={0} max={1} text="score threshold" updateControls={this.updateControls} />
+      </div>
+    )
+  }
+
+  private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
+    const newControls: IPoseEstimationControls = {
+      ...this.props.controls,
+      [key]: value
+    };
+
+    this.props.updateControls('poseEstimation', newControls);
+  }
+}
 
 interface IOutputControls {
   showVideo: boolean,
@@ -15,13 +146,10 @@ interface IOutputControls {
   minPartConfidence: number,
 }
 
-
-interface IOutputControlProps {
+class OutputControls extends React.Component<{
   controls: IOutputControls,
   updateControls: (key: keyof IControls, controls: IOutputControls) => void
-}
-
-class OutputControls extends React.Component<IOutputControlProps> {
+}> {
   public render() {
     const { controls } = this.props;
     return (
@@ -52,60 +180,21 @@ class OutputControls extends React.Component<IOutputControlProps> {
   }
 }
 
-interface IPoseEstimationControls {
-  active: boolean,
-  imageScaleFactor: number,
-  maxPoseDetections: number,
-  nmsRadius: number,
-  outputStride: OutputStride,
-  maxDetections: number
-  scoreThreshold: number,
-};
-
-interface IPoseEstimationControlProps {
-  controls: IPoseEstimationControls,
-  updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
-}
-
-class PoseEstimationControls extends React.Component<IPoseEstimationControlProps> {
-  public render() {
-    const { controls } = this.props;
-    return (
-      <div>
-        <SwitchControl controls={controls} controlKey='active'
-          updateControls={this.updateControls} />
-        <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
-          min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
-        <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
-          min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
-        <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
-          min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
-        <SliderControl key="scoreThreshold" controls={controls} controlKey="scoreThreshold"
-          min={0} max={1} text="score threshold" updateControls={this.updateControls} />
-      </div>
-    )
-  }
-
-  private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
-    const newControls: IPoseEstimationControls = {
-      ...this.props.controls,
-      [key]: value
-    };
-
-    this.props.updateControls('poseEstimation', newControls);
-  }
-}
-
 export interface IControls {
   input: {
     mobileNetArchitecture: '0.50'|'0.75'|'1.00'|'1.01',
   },
+  camera: ICameraControls,
+  connection: IConnectionControls,
   poseEstimation: IPoseEstimationControls,
   output: IOutputControls,
 }
 
 interface IControlProps {
   controls: IControls,
+  connection: IConnectionState,
+  connect: () => void,
+  disconnect: () => void,
   updateControls: (controls: IControls) => void
 }
 
@@ -117,8 +206,19 @@ export default class Controls extends React.Component<IControlProps> {
 
     return (
       <div>
-         <Typography>Pose Estimation</Typography>
-         <PoseEstimationControls controls={controls.poseEstimation} updateControls={this.updateSubControls} />
+         <ConnectionControls connection={this.props.connection}
+            controls={controls.connection}
+            updateControls={this.updateSubControls} connect={this.props.connect}
+            disconnect={this.props.disconnect}
+          />
+         <Typography>Camera</Typography>
+         <CameraControls controls={controls.camera} updateControls={this.updateSubControls} />
+         {controls.camera.capture && (
+           <div>
+            <Typography>Pose Estimation</Typography>
+            <PoseEstimationControls controls={controls.poseEstimation} updateControls={this.updateSubControls} />
+          </div>
+         )}
          <Typography>Output</Typography>
          <OutputControls controls={controls.output} updateControls={this.updateSubControls} />
       </div>

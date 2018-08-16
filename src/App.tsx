@@ -3,6 +3,7 @@ import * as React from 'react';
 import './App.css';
 
 import { createStyles, Grid, Paper, Theme, withStyles, WithStyles } from "@material-ui/core";
+import { IConnectionState } from "./Connection";
 import Controls, { IControls } from "./Controls";
 import { PoseEstimator } from "./PoseEstimator";
 import PosesRenderer from "./PosesRenderer";
@@ -15,7 +16,7 @@ interface IAppState {
   changeToArchitecture: boolean,
   net: posenet.PoseNet | null,
   camera: string | null,
-  socket: WebSocket | null,
+  connection: IConnectionState,
   error: string | null,
   video: HTMLVideoElement | null,
 }
@@ -32,9 +33,18 @@ const styles = ({ palette, spacing }: Theme) => createStyles({
 });
 
 const defaultAppState: IAppState = {
+  connection: {
+    status: 'closed'
+  },
   controls: {
     input: {
       mobileNetArchitecture: isMobile() ? '0.50' : '0.75',
+    },
+    camera: {
+      capture: true
+    },
+    connection: {
+      connectTo: '127.0.0.1:8080'
     },
     output: {
       showVideo: true,
@@ -59,7 +69,6 @@ const defaultAppState: IAppState = {
   net: null,
   video: null,
   camera: null,
-  socket: null,
   error: null,
   poses: []
 };
@@ -75,7 +84,6 @@ class App extends React.Component<IProps, IAppState> {
     const net = await posenet.load(0.75);
 
     this.setState({net});
-
   }
 
   public render() {
@@ -93,19 +101,23 @@ class App extends React.Component<IProps, IAppState> {
           )
         }
 
-        <WebCamCapture onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
+        {this.state.controls.camera.capture && (
+          <div>
+            <WebCamCapture onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
 
-        {this.state.net && this.state.video && (
-          <PoseEstimator
-            net={this.state.net}
-            video={this.state.video}
-            {...this.state.controls.poseEstimation}
-            onPosesEstimated={this.posesEstimated}
-          />
+            {this.state.net && this.state.video && (
+              <PoseEstimator
+                net={this.state.net}
+                video={this.state.video}
+                {...this.state.controls.poseEstimation}
+                onPosesEstimated={this.posesEstimated}
+              />
+            )}
+          </div>
         )}
 
         <Grid container>
-           <Grid item xs={8}>
+          <Grid item xs={8}>
             <Paper className={classes.paper}>
               {this.state.video && (
                   <PosesRenderer
@@ -118,7 +130,13 @@ class App extends React.Component<IProps, IAppState> {
           </Grid>
           <Grid item xs={4} >
             <Paper className={classes.paper}>
-              <Controls controls={this.state.controls} updateControls={this.updateControls} />
+              <Controls
+                controls={this.state.controls}
+                updateControls={this.updateControls}
+                connection={this.state.connection}
+                connect={this.connectToSocket}
+                disconnect={this.disconnectFromSocket}
+              />
             </Paper>
           </Grid>
 
@@ -136,8 +154,78 @@ class App extends React.Component<IProps, IAppState> {
   private onError = (error: string) =>
     this.setState({error});
 
-  private posesEstimated = (poses: posenet.Pose[]) =>
+  private posesEstimated = (poses: posenet.Pose[]) => {
     this.setState({poses});
+
+    const { video, connection: { socket, status } } = this.state;
+
+    if (socket && video && status === "open") {
+      const message = {
+        poses,
+        image: {width: video.width, height: video.height}
+      };
+      socket.send(JSON.stringify(message));
+    }
+  }
+
+  private disconnectFromSocket = () => {
+    const existingSocket = this.state.connection.socket
+    if (existingSocket) {
+      existingSocket.close();
+
+      existingSocket.removeEventListener('open', this.updateSocketStatus);
+      existingSocket.removeEventListener('close', this.updateSocketStatus);
+    }
+
+    this.setState({
+      connection: {
+        status: 'closed'
+      }
+    });
+
+  }
+
+  private connectToSocket = () => {
+    const { connectTo } = this.state.controls.connection;
+
+    if (connectTo) {
+      this.disconnectFromSocket();
+
+      const socket = new WebSocket(`ws://${connectTo}`);
+
+      socket.addEventListener('open', this.updateSocketStatus);
+      socket.addEventListener('error', this.updateSocketStatus);
+      socket.addEventListener('close', this.updateSocketStatus);
+
+      this.setState({
+        connection: {
+          socket,
+          status: 'connecting'
+        }
+      });
+    }
+  }
+
+  private updateSocketStatus = () => {
+    const { socket } = this.state.connection;
+    if (!socket) { return };
+    if (socket.readyState === socket.OPEN) {
+      this.setState({
+        connection : {
+          socket,
+          status: 'open'
+        }
+      })
+    }
+    else if (socket.readyState === socket.CLOSED) {
+      this.setState({
+        connection : {
+          socket,
+          status: 'closed'
+        }
+      });
+    }
+  }
 }
 
 export default withStyles(styles)(App);

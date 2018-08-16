@@ -23,7 +23,11 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
     this.canvasRef = React.createRef();
   }
 
-  public componentWillReceiveProps(nextProps: IPosesRendererProps) {
+  public componentDidMount() {
+    this.updateCanvasFrame();
+  }
+
+  public updateCanvasFrame = () => {
     const canvas = this.canvasRef.current;
     if (!canvas) { return }
 
@@ -56,6 +60,7 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
       }
     });
 
+    requestAnimationFrame(this.updateCanvasFrame);
   }
 
   public render() {
