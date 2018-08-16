@@ -6,7 +6,8 @@ import { OutputStride } from "./types";
 import { SliderControl, SwitchControl } from './UI';
 
 interface IConnectionControls {
-  connectTo?: string
+  host: string,
+  port: string
 }
 
 class ConnectionControls extends React.Component<{
@@ -23,25 +24,34 @@ class ConnectionControls extends React.Component<{
        {(status === 'closed') && (
          <div>
             <TextField
-              label="connect to"
-              value={controls.connectTo}
+              label="host"
+              key="host"
+              value={controls.host}
               onChange={this.connectToChanged}
               margin="normal"
             />
-            <Button variant="contained" color="primary" onClick={this.props.connect}>
+            :
+            <TextField
+              label="port"
+              key="port"
+              value={controls.port}
+              onChange={this.hostChanged}
+              margin="normal"
+            />
+             <Button variant="contained" color="primary" onClick={this.props.connect}>
               Connect
             </Button>
           </div>
         )}
         {(status === 'connecting') && (
           <Typography>
-            {`connecting to ${controls.connectTo}`}
+            {`connecting to ${controls.host}`}
           </Typography>
         )}
         {(status === 'open') && (
           <div>
             <Typography>
-              {`connected to ${controls.connectTo}`}
+              {`connected to ${controls.host}`}
             </Typography>
             <Button variant="contained" color="primary" onClick={this.props.disconnect}>
               Disconnect
@@ -53,7 +63,11 @@ class ConnectionControls extends React.Component<{
   }
 
   private connectToChanged: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    this.updateControls('connectTo', e.target.value);
+    this.updateControls('host', e.target.value);
+  }
+
+  private hostChanged: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    this.updateControls('port', e.target.value);
   }
 
   private updateControls = (key: keyof IConnectionControls, value: any) => {

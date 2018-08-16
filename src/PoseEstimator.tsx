@@ -12,7 +12,7 @@ interface IPoseEstimatorProps {
   maxDetections: number,
   scoreThreshold: number,
   nmsRadius: number,
-  onPosesEstimated: (poses: posenet.Pose[]) => void
+  onPosesEstimated: (poses: posenet.Pose[], imageSize: {width: number, height: number}) => void
 }
 
 const flipHorizontal = true;
@@ -34,7 +34,8 @@ export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
         flipHorizontal, this.props.outputStride, this.props.maxDetections, this.props.scoreThreshold,
         this.props.nmsRadius);
 
-      this.props.onPosesEstimated(poses);
+      const { width, height } = this.props.video;
+      this.props.onPosesEstimated(poses, { width, height });
    }
 
     requestAnimationFrame(this.poseDetectionFrame);

@@ -13,12 +13,18 @@ import WebCamCapture from "./WebCamCapture";
 interface IAppState {
   controls: IControls,
   poses: posenet.Pose[],
+  imageSize: {width: number, height: number},
   changeToArchitecture: boolean,
   net: posenet.PoseNet | null,
   camera: string | null,
   connection: IConnectionState,
   error: string | null,
-  video: HTMLVideoElement | null,
+  video?: HTMLVideoElement,
+}
+
+interface IPoseMessage {
+  poses: posenet.Pose[],
+  image: {width: number, height: number}
 }
 
 const styles = ({ palette, spacing }: Theme) => createStyles({
@@ -41,10 +47,11 @@ const defaultAppState: IAppState = {
       mobileNetArchitecture: isMobile() ? '0.50' : '0.75',
     },
     camera: {
-      capture: true
+      capture: false
     },
     connection: {
-      connectTo: '127.0.0.1:8080'
+      host: window.location.hostname,
+      port: '8080'
     },
     output: {
       showVideo: true,
@@ -67,10 +74,10 @@ const defaultAppState: IAppState = {
   },
   changeToArchitecture: false,
   net: null,
-  video: null,
   camera: null,
   error: null,
-  poses: []
+  poses: [],
+  imageSize: {width: 0, height: 0}
 };
 
 interface IProps extends WithStyles<typeof styles> {
@@ -119,13 +126,12 @@ class App extends React.Component<IProps, IAppState> {
         <Grid container>
           <Grid item xs={8}>
             <Paper className={classes.paper}>
-              {this.state.video && (
-                  <PosesRenderer
-                    poses={this.state.poses}
-                    video={this.state.video}
-                    {...this.state.controls.output}
-                  />
-              )}
+              <PosesRenderer
+                poses={this.state.poses}
+                video={this.state.video}
+                imageSize={this.state.imageSize}
+                {...this.state.controls.output}
+              />
             </Paper>
           </Grid>
           <Grid item xs={4} >
@@ -139,7 +145,6 @@ class App extends React.Component<IProps, IAppState> {
               />
             </Paper>
           </Grid>
-
         </Grid>
       </div>
     );
@@ -154,13 +159,13 @@ class App extends React.Component<IProps, IAppState> {
   private onError = (error: string) =>
     this.setState({error});
 
-  private posesEstimated = (poses: posenet.Pose[]) => {
-    this.setState({poses});
+  private posesEstimated = (poses: posenet.Pose[], imageSize: {width: number, height: number}) => {
+    this.setState({poses, imageSize});
 
     const { video, connection: { socket, status } } = this.state;
 
     if (socket && video && status === "open") {
-      const message = {
+      const message: IPoseMessage = {
         poses,
         image: {width: video.width, height: video.height}
       };
@@ -175,6 +180,7 @@ class App extends React.Component<IProps, IAppState> {
 
       existingSocket.removeEventListener('open', this.updateSocketStatus);
       existingSocket.removeEventListener('close', this.updateSocketStatus);
+      existingSocket.removeEventListener('message', this.socketMessageReceived);
     }
 
     this.setState({
@@ -182,16 +188,15 @@ class App extends React.Component<IProps, IAppState> {
         status: 'closed'
       }
     });
-
   }
 
   private connectToSocket = () => {
-    const { connectTo } = this.state.controls.connection;
+    const { host, port } = this.state.controls.connection;
 
-    if (connectTo) {
+    if (host) {
       this.disconnectFromSocket();
 
-      const socket = new WebSocket(`ws://${connectTo}`);
+      const socket = new WebSocket(`ws://${host}:${port}`);
 
       socket.addEventListener('open', this.updateSocketStatus);
       socket.addEventListener('error', this.updateSocketStatus);
@@ -203,7 +208,16 @@ class App extends React.Component<IProps, IAppState> {
           status: 'connecting'
         }
       });
+
+      socket.addEventListener('message', this.socketMessageReceived);
     }
+  }
+
+  private socketMessageReceived = (ev: MessageEvent) => {
+    // tslint:disable-next-line:no-console
+    const { poses, image } = JSON.parse(ev.data) as IPoseMessage;
+
+    this.setState({poses, imageSize: image});
   }
 
   private updateSocketStatus = () => {

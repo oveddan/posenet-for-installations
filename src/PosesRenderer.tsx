@@ -3,7 +3,8 @@ import * as React from 'react';
 import { drawKeypoints, drawSkeleton } from './util';
 
 interface IPosesRendererProps {
-  video: HTMLVideoElement,
+  video?: HTMLVideoElement,
+  imageSize: {width: number, height: number},
   showVideo: boolean,
   poses: posenet.Pose[],
   minPoseConfidence: number,
@@ -33,15 +34,15 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
 
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
-    const {width: videoWidth, height: videoHeight} = this.props.video;
+    const {width, height} = this.props.imageSize;
 
-    ctx.clearRect(0, 0, videoWidth, videoHeight);
+    ctx.clearRect(0, 0, width, height);
 
-    if (this.props.showVideo) {
+    if (this.props.showVideo && this.props.video) {
       ctx.save();
       ctx.scale(-1, 1);
-      ctx.translate(-videoWidth, 0);
-      ctx.drawImage(this.props.video, 0, 0, videoWidth, videoHeight);
+      ctx.translate(-width, 0);
+      ctx.drawImage(this.props.video, 0, 0, width, height);
       ctx.restore();
     }
 
@@ -67,8 +68,8 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
     return (
       <canvas
         ref={this.canvasRef}
-        width={this.props.video.width}
-        height={this.props.video.height}
+        width={this.props.imageSize.width}
+        height={this.props.imageSize.height}
       />
     )
   }
