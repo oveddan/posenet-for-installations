@@ -9,6 +9,7 @@
     "@tensorflow-models/posenet": "^0.2.2",
     "@tensorflow/tfjs": "^0.12.4",
     "clang-format": "1.2.2",
+    "deeplearn-legacy-loader": "^0.0.1",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-scripts-ts": "2.17.0"

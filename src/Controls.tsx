@@ -1,7 +1,10 @@
 import * as React from 'react';
 
 import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, createStyles, TextField, Theme, WithStyles, withStyles } from '@material-ui/core';
-import { Cast, Videocam, DirectionsWalk, TransferWithinAStation } from '@material-ui/icons';
+import Cast from "@material-ui/icons/Cast";
+import Videocam from "@material-ui/icons/Videocam";
+import DirectionsWalk from "@material-ui/icons/DirectionsWalk";
+import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
 import { IControls, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
 import { SliderControl, SwitchControl } from './UI';
 import * as posenet from '@tensorflow-models/posenet';
