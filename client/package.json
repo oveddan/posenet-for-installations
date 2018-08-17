@@ -10,19 +10,21 @@
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-scripts-ts": "2.17.0",
-    "serve": "^9.6.0"
+    "serve-handler": "^4.0.1"
   },
   "scripts": {
     "start": "react-scripts-ts start",
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
-    "serve": "serve -s build"
+    "serve": "serve -s build",
+    "distribute": "npm run build && node distribute.js"
   },
   "devDependencies": {
     "@types/node": "^10.7.0",
     "@types/react": "^16.4.10",
     "@types/react-dom": "^16.0.7",
+    "nexe": "^2.0.0-rc.34",
     "typescript": "^3.0.1"
   }
 }
