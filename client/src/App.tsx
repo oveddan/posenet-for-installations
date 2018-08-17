@@ -9,6 +9,7 @@ import PosesRenderer from "./PosesRenderer";
 import {isMobile} from './util';
 import { IAppState, IControls, IPoseMessage, } from './types'
 import WebCamCapture from "./WebCamCapture";
+import { loadModel } from './models';
 
 
 const styles = ({ palette, spacing }: Theme) => createStyles({
@@ -89,7 +90,7 @@ class App extends React.Component<IProps, IAppState> {
 
   public async componentDidMount() {
     // Load the PoseNet model weights with architecture 0.75
-    const net = await posenet.load(0.75);
+    const net = await loadModel(0.75);
 
     this.setState({
       model: {

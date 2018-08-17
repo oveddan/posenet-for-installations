@@ -1,0 +1,29 @@
+{
+  "name": "posenet-offline-websocket-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "server": "node dist/app.js",
+    "serve": "electron ./dist/main.js",
+    "start-server": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch\" \"npm run serve\""
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/mkdirp": "^0.5.2",
+    "@types/node": "^10.7.0",
+    "@types/ws": "^6.0.0",
+    "axios": "^0.18.0",
+    "mkdirp": "^0.5.1",
+    "typescript": "^3.0.1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^3.6.1",
+    "electron": "^2.0.7",
+    "ws": "^6.0.0"
+  }
+}

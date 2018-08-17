@@ -1,33 +1,29 @@
 {
-  "name": "posenet-over-webrtc",
-  "version": "0.1.0",
-  "private": true,
+  "name": "posenet-offline-websocket",
+  "version": "1.0.0",
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).",
+  "main": "index.js",
   "dependencies": {
-    "@material-ui/core": "^1.5.0",
-    "@material-ui/icons": "^2.0.2",
-    "@material-ui/lab": "^1.0.0-alpha.10",
-    "@tensorflow-models/posenet": "^0.2.2",
-    "@tensorflow/tfjs": "^0.12.4",
-    "clang-format": "1.2.2",
-    "deeplearn-legacy-loader": "^0.0.1",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
-    "react-scripts-ts": "2.17.0",
-    "request": "^2.88.0"
-  },
-  "scripts": {
-    "start": "react-scripts-ts start",
-    "build": "react-scripts-ts build",
-    "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject",
-    "build-ts": "tsc",
-    "watch-ts": "tsc -w"
+    "clang-format": "^1.2.4",
+    "serve": "^9.6.0"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.1",
-    "@types/node": "^10.7.0",
-    "@types/react": "^16.4.10",
-    "@types/react-dom": "^16.0.7",
     "typescript": "^3.0.1"
-  }
+  },
+  "scripts": {
+    "build-client": "cd client && npm run build",
+    "start-client": "cd client && npm start",
+    "build": "npm run build-client",
+    "start": "npm run start-client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oveddan/posenet-offline-websocket.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oveddan/posenet-offline-websocket/issues"
+  },
+  "homepage": "https://github.com/oveddan/posenet-offline-websocket#readme"
 }
