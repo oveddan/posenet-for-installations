@@ -6,9 +6,10 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "server": "node dist/app.js",
-    "serve": "electron ./dist/main.js",
-    "start-server": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch\" \"npm run serve\""
+    "server": "node dist/index.js",
+    "serve": "electron ./dist/index.js",
+    "start": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch\" \"npm run serve\"",
+    "distribute": "node distribute.js"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
@@ -17,7 +18,8 @@
     "@types/ws": "^6.0.0",
     "axios": "^0.18.0",
     "mkdirp": "^0.5.1",
-    "typescript": "^3.0.1"
+    "typescript": "^3.0.1",
+    "nexe": "^2.0.0-rc.34"
   },
   "author": "",
   "license": "ISC",

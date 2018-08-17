@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "clang-format": "^1.2.4",
+    "concurrently": "^3.6.1",
     "serve": "^9.6.0"
   },
   "devDependencies": {
@@ -13,8 +14,14 @@
   "scripts": {
     "build-client": "cd client && npm run build",
     "start-client": "cd client && npm start",
-    "build": "npm run build-client",
-    "start": "npm run start-client"
+    "build-server": "cd server && npm run build",
+    "start-server": "cd server && npm start",
+    "distribute-server": "cd server && npm run distribute",
+    "distribute-client": "cd client && npm run distribute",
+    "build": "npm run build-client && npm run build-server",
+    "distribute": "npm run distribute-server && npm run distribute-client",
+    "build-and-distribute": "npm run build && npm run distribute",
+    "start": "concurrently -k -p \"[{name}]\" -n \"Server,Client\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run start-client\" \"npm run start-server\""
   },
   "repository": {
     "type": "git",

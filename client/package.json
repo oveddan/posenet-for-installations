@@ -17,8 +17,8 @@
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
-    "serve": "serve -s build",
-    "distribute": "npm run build && node distribute.js"
+    "serve": "node serve.js",
+    "distribute": "node distribute.js"
   },
   "devDependencies": {
     "@types/node": "^10.7.0",
