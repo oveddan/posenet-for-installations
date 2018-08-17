@@ -61,6 +61,13 @@
     recompose "^0.28.0"
     warning "^4.0.1"
 
+"@material-ui/icons@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@material-ui/icons/-/icons-2.0.2.tgz#0150c38cda089ef284e9b4a730dfe6e88a0b5de6"
+  dependencies:
+    "@babel/runtime" "7.0.0-beta.42"
+    recompose "^0.28.0"
+
 "@material-ui/lab@^1.0.0-alpha.10":
   version "1.0.0-alpha.10"
   resolved "https://registry.yarnpkg.com/@material-ui/lab/-/lab-1.0.0-alpha.10.tgz#e6e31bbbfddd0573b3fb5c1ab28c09bbcdddc61a"
@@ -1584,9 +1591,9 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-clang-format@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/clang-format/-/clang-format-1.2.4.tgz#4bb4b0a98180428deb093cf20982e9fc1af20b6c"
+clang-format@1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/clang-format/-/clang-format-1.2.2.tgz#a7277a03fce9aa4e387ddaa83b60d99dab115737"
   dependencies:
     async "^1.5.2"
     glob "^7.0.0"

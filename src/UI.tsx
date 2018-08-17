@@ -38,12 +38,13 @@ interface ISwitchControlProps<T, K extends keyof T> {
   controls: T,
   controlKey: K,
   text?: string,
+  disabled?: boolean,
   updateControls: (key: K, value: boolean) => void
 };
 
 export class SwitchControl<T, K extends keyof T> extends React.Component<ISwitchControlProps<T, K>> {
   public render() {
-    const {controlKey, controls } = this.props;
+    const {disabled, text, controlKey, controls } = this.props;
 
     const checked = controls[controlKey];
 
@@ -56,9 +57,10 @@ export class SwitchControl<T, K extends keyof T> extends React.Component<ISwitch
               checked={checked}
               onChange={this.handleChanged}
               value="checkedA"
+              disabled={disabled}
             />
           }
-          label={this.props.controlKey}
+          label={text || controlKey}
         />
        </FormGroup>
      );

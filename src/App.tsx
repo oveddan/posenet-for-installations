@@ -2,39 +2,25 @@ import * as posenet from "@tensorflow-models/posenet";
 import * as React from 'react';
 import './App.css';
 
-import { createStyles, Grid, Paper, Theme, withStyles, WithStyles } from "@material-ui/core";
-import { IConnectionState } from "./Connection";
-import Controls, { IControls } from "./Controls";
+import { AppBar, createStyles, Grid, Theme, Toolbar, Typography, withStyles, WithStyles } from "@material-ui/core";
+import Controls from "./Controls";
 import { PoseEstimator } from "./PoseEstimator";
 import PosesRenderer from "./PosesRenderer";
 import {isMobile} from './util';
+import { IAppState, IControls, IPoseMessage, } from './types'
 import WebCamCapture from "./WebCamCapture";
 
-interface IAppState {
-  controls: IControls,
-  poses: posenet.Pose[],
-  imageSize: {width: number, height: number},
-  changeToArchitecture: boolean,
-  net: posenet.PoseNet | null,
-  camera: string | null,
-  connection: IConnectionState,
-  error: string | null,
-  video?: HTMLVideoElement,
-}
-
-interface IPoseMessage {
-  poses: posenet.Pose[],
-  image: {width: number, height: number}
-}
 
 const styles = ({ palette, spacing }: Theme) => createStyles({
   root: {
     flexGrow: 1,
+    height: '100%'
   },
   paper: {
     padding: spacing.unit * 2,
     textAlign: 'center',
     color: palette.text.secondary,
+    height: '100%'
   },
 });
 
@@ -72,16 +58,31 @@ const defaultAppState: IAppState = {
       scoreThreshold: 0.1
     },
   },
-  changeToArchitecture: false,
-  net: null,
+  model: {
+    loadingStatus: 'idle'
+  },
   camera: null,
   error: null,
-  poses: [],
   imageSize: {width: 0, height: 0}
 };
 
 interface IProps extends WithStyles<typeof styles> {
 };
+const MenuBar = () => (
+  <AppBar position="static" color="default">
+    <Toolbar>
+      <Typography variant="title" color="inherit">
+        PoseNet Chat
+      </Typography>
+    </Toolbar>
+  </AppBar>
+)
+
+const EmptyContent = () => (
+  <Typography>
+    Start a video capture or connect to the server to start
+  </Typography>
+)
 
 class App extends React.Component<IProps, IAppState> {
   public state = defaultAppState;
@@ -90,71 +91,85 @@ class App extends React.Component<IProps, IAppState> {
     // Load the PoseNet model weights with architecture 0.75
     const net = await posenet.load(0.75);
 
-    this.setState({net});
+    this.setState({
+      model: {
+        ...this.state.model,
+        net,
+        loadingStatus: "loaded"
+      }
+    });
   }
 
   public render() {
     const { classes } = this.props;
-    if (this.state.error) {
-      return (<div id="info">{this.state.error}</div>)
-    }
 
     return (
       <div className={classes.root}>
-        {!this.state.net && (
+        {!this.state.model.net && (
           <div id="loading">
             Loading the model...
           </div>
           )
         }
 
-        {this.state.controls.camera.capture && (
-          <div>
-            <WebCamCapture onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
+       <WebCamCapture capture={this.state.controls.camera.capture} onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
 
-            {this.state.net && this.state.video && (
-              <PoseEstimator
-                net={this.state.net}
-                video={this.state.video}
-                {...this.state.controls.poseEstimation}
-                onPosesEstimated={this.posesEstimated}
-              />
-            )}
-          </div>
+        {this.state.model.net && this.state.video && (
+          <PoseEstimator
+            net={this.state.model.net}
+            video={this.state.video}
+            {...this.state.controls.poseEstimation}
+            onPosesEstimated={this.posesEstimated}
+          />
         )}
 
-        <Grid container>
-          <Grid item xs={8}>
-            <Paper className={classes.paper}>
-              <PosesRenderer
-                poses={this.state.poses}
-                video={this.state.video}
-                imageSize={this.state.imageSize}
-                {...this.state.controls.output}
-              />
-            </Paper>
+        <MenuBar />
+
+        <Grid
+          container
+          justify="center"
+            direction="row"
+          alignItems="stretch"
+          style={{height: '95%'}}
+       >
+          <Grid item xs={12} md={8}
+            direction="row"
+            alignItems="stretch"
+            >
+              {(this.state.video || this.state.connection.socket) && (
+                <PosesRenderer
+                  poses={this.state.poses}
+                  video={this.state.video}
+                  imageSize={this.state.imageSize}
+                  {...this.state.controls.output}
+                />
+              )}
+              {(!this.state.video && !this.state.connection.socket) && (
+                <EmptyContent />
+              )}
           </Grid>
-          <Grid item xs={4} >
-            <Paper className={classes.paper}>
-              <Controls
-                controls={this.state.controls}
-                updateControls={this.updateControls}
-                connection={this.state.connection}
-                connect={this.connectToSocket}
-                disconnect={this.disconnectFromSocket}
-              />
-            </Paper>
-          </Grid>
-        </Grid>
-      </div>
+       </Grid>
+      <Controls
+        controls={this.state.controls}
+        updateControls={this.updateControls}
+        connection={this.state.connection}
+        connect={this.connectToSocket}
+        disconnect={this.disconnectFromSocket}
+        model={this.state.model}
+        video={this.state.video}
+        poses={this.state.poses}
+      />
+       </div>
     );
   }
 
   private updateControls = (controls: IControls) =>
     this.setState({controls});
 
-  private webCamCaptureLoaded = (video: HTMLVideoElement) =>
-    this.setState({video});
+  private webCamCaptureLoaded = (video?: HTMLVideoElement) => {
+    const { width, height } = video || this.state.imageSize;
+    this.setState({video, imageSize: { width, height }});
+  }
 
   private onError = (error: string) =>
     this.setState({error});

@@ -1,34 +1,281 @@
 import * as React from 'react';
 
-import { Button, TextField, Typography } from '@material-ui/core';
-import { IConnectionState } from './Connection';
-import { OutputStride } from "./types";
+import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, createStyles, TextField, Theme, WithStyles, withStyles } from '@material-ui/core';
+import { Cast, Videocam, DirectionsWalk, TransferWithinAStation } from '@material-ui/icons';
+import { IControls, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
 import { SliderControl, SwitchControl } from './UI';
+import * as posenet from '@tensorflow-models/posenet';
 
-interface IConnectionControls {
-  host: string,
-  port: string
+const styles = ({ spacing }: Theme) => createStyles({
+  fab: {
+    position: 'fixed',
+    bottom: 20,
+    width: '100%',
+    textAlign: 'center'
+  },
+  button: {
+    margin: spacing.unit,
+  },
+  extendedIcon: {
+    marginRight: spacing.unit,
+  },
+});
+
+interface ICameraControlsProps extends WithStyles<typeof styles> {
+  controls: ICameraControls,
+  video?: HTMLVideoElement,
+  updateControls: (key: keyof IControls, controls: ICameraControls) => void
 }
 
-class ConnectionControls extends React.Component<{
+export class CameraControls extends React.Component<ICameraControlsProps> {
+  public render() {
+    const { classes } = this.props;
+
+    return (
+      <Button variant="fab"
+        color={this.getButtonColor()}
+        aria-label="Connect"
+        className={classes.button}
+        onClick={this.toggleCapture}
+        disabled={this.isStartingCapture}
+      >
+        <Videocam />
+      </Button>
+    )
+  }
+
+  private getButtonColor = (): "primary" | "secondary" | undefined => {
+    if (this.isCapturing) {
+      return "primary";
+    }
+    if (this.isStartingCapture) {
+      return "secondary";
+    }
+    return;
+  }
+
+  private get isCapturing() {
+    return (this.props.controls.capture && this.props.video);
+  }
+
+  private get isStartingCapture() {
+    return (this.props.controls.capture && !this.props.video);
+  }
+
+  private toggleCapture = () => {
+    if (!this.isStartingCapture) {
+      const newControls: ICameraControls = {
+        ...this.props.controls,
+        capture: !this.props.controls.capture
+      };
+
+      this.props.updateControls('camera', newControls);
+    }
+  }
+}
+
+
+interface IPoseEstimationControlsProps extends WithStyles<typeof styles> {
+  controls: IPoseEstimationControls,
+  model: IModelState,
+  updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
+};
+
+export class PoseEstimationControls extends React.Component<IPoseEstimationControlsProps, {
+  open: boolean
+}> {
+  public state = {
+    open: false
+  };
+
+  public render() {
+    const { controls, model: { loadingStatus }, classes } = this.props;
+    return (
+      <span>
+        <Button variant="fab" color={controls.active ? "primary" : undefined} aria-label="Estimate"
+          className={classes.button} onClick={this.openDialog}>
+          <DirectionsWalk />
+        </Button>
+        <Dialog
+          open={this.state.open || false}
+          onClose={this.closeDialog}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Pose Estimation</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {controls.active && (
+                "Estimating Poses"
+              )}
+              {!controls.active && loadingStatus === "idle" && (
+                "Load the model and estimate poses"
+              )}
+              {!controls.active && loadingStatus === "loading" && (
+                "Loading the model..."
+              )}
+              {!controls.active && loadingStatus === "error" && (
+                "Error loading the model..."
+              )}
+            </DialogContentText>
+            <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
+              min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
+            <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
+              min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
+            <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
+              min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
+            <SliderControl key="scoreThreshold" controls={controls} controlKey="scoreThreshold"
+              min={0} max={1} text="score threshold" updateControls={this.updateControls} />
+
+            <SwitchControl controls={controls} controlKey='active'
+              updateControls={this.updateControls} disabled={loadingStatus !== 'loaded'} />
+           </DialogContent>
+          <DialogActions>
+           <Button onClick={this.closeDialog} color="primary">
+              Close
+            </Button>
+         </DialogActions>
+        </Dialog>
+      </span>
+    )
+  }
+
+  private openDialog = () => {
+    this.setState({open: true});
+  }
+
+  private closeDialog = () => {
+    this.setState({open: false});
+  }
+
+  private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
+    const newControls: IPoseEstimationControls = {
+      ...this.props.controls,
+      [key]: value
+    };
+
+    this.props.updateControls('poseEstimation', newControls);
+  }
+}
+
+
+interface IOutputControlsProps extends WithStyles<typeof styles>  {
+  controls: IOutputControls,
+  updateControls: (key: keyof IControls, controls: IOutputControls) => void
+}
+
+export class OutputControls extends React.Component<IOutputControlsProps, {
+  open: boolean
+}> {
+  public state = {
+    open: false
+  };
+
+  public render() {
+    const { controls, classes } = this.props;
+      return (
+        <span>
+          <Button variant="fab" aria-label="Estimate"
+            className={classes.button} onClick={this.openDialog}>
+            <TransferWithinAStation />
+          </Button>
+          <Dialog
+            open={this.state.open || false}
+            onClose={this.closeDialog}
+            aria-labelledby="form-dialog-title"
+          >
+            <DialogTitle id="form-dialog-title">Display/Output</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Display/Output
+              </DialogContentText>
+              <SwitchControl controls={controls} controlKey='showVideo'
+                updateControls={this.updateControls} />
+              <SwitchControl controls={controls} controlKey='showSkeleton'
+                updateControls={this.updateControls} />
+              <SwitchControl controls={controls} controlKey='showPoints'
+                updateControls={this.updateControls} />
+              <SliderControl key="lineThickness" controls={controls} controlKey="lineThickness"
+                min={0} max={100} text="line thickness" updateControls={this.updateControls} />
+              <SliderControl key="minPartConfidence" controls={controls} controlKey="minPartConfidence"
+                min={0} max={1} text="min part confidence" updateControls={this.updateControls} />
+              <SliderControl key="minPoseConfidence" controls={controls} controlKey="minPoseConfidence"
+                min={0} max={1} text="min pose confidence" updateControls={this.updateControls} />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.closeDialog} color="primary">
+                Close
+              </Button>
+          </DialogActions>
+          </Dialog>
+        </span>
+    )
+  }
+  private openDialog = () => {
+    this.setState({open: true});
+  }
+
+  private closeDialog = () => {
+    this.setState({open: false});
+  }
+
+  private updateControls = (key: keyof IOutputControls, value: any) => {
+    const newControls: IOutputControls = {
+      ...this.props.controls,
+      [key]: value
+    };
+
+    this.props.updateControls('output', newControls);
+  }
+}
+
+
+interface IConnectionButtonProps extends WithStyles<typeof styles> {
   controls: IConnectionControls,
   connection: IConnectionState,
-  connect: () => void,
+  connect: () => void
   disconnect: () => void,
   updateControls: (key: keyof IControls, controls: IConnectionControls) => void
+};
+
+class ConnectionControls extends React.Component<IConnectionButtonProps, {
+  open: boolean
 }> {
+  public state = {
+    open: false
+  };
+
   public render() {
-    const { controls, connection : { status } } = this.props;
+    const { connection : { status }, classes, controls } = this.props;
     return (
-      <div>
-       {(status === 'closed') && (
-         <div>
+      <span>
+        <Button variant="fab" color={status === "open" ? "primary" : undefined} aria-label="Connect" className={classes.button} onClick={this.openDialog}>
+          <Cast />
+        </Button>
+        <Dialog
+          open={this.state.open || false}
+          onClose={this.closeDialog}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Pose Connection</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {status === 'closed' && (
+                "Connect to the server to send or receive estimated poses."
+              )}
+              {status === "open" && (
+                "Connected to:"
+              )}
+              {status === "closed" && (
+                "Connecting to:"
+              )}
+             </DialogContentText>
             <TextField
               label="host"
               key="host"
               value={controls.host}
               onChange={this.connectToChanged}
               margin="normal"
+              disabled={status !== "closed"}
             />
             :
             <TextField
@@ -37,29 +284,47 @@ class ConnectionControls extends React.Component<{
               value={controls.port}
               onChange={this.hostChanged}
               margin="normal"
+              disabled={status !== "closed"}
             />
-             <Button variant="contained" color="primary" onClick={this.props.connect}>
-              Connect
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.closeDialog} color="primary">
+              Cancel
             </Button>
-          </div>
-        )}
-        {(status === 'connecting') && (
-          <Typography>
-            {`connecting to ${controls.host}`}
-          </Typography>
-        )}
-        {(status === 'open') && (
-          <div>
-            <Typography>
-              {`connected to ${controls.host}`}
-            </Typography>
-            <Button variant="contained" color="primary" onClick={this.props.disconnect}>
-              Disconnect
-            </Button>
-          </div>
-        )}
-      </div>
+            {status === "closed" && (
+              <Button onClick={this.handleConnect} color="primary">
+                Connect
+              </Button>
+            )}
+            {status === "open" && (
+              <Button onClick={this.handleDisconnect} color="primary">
+                Disconnect
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
+     </span>
     )
+  }
+
+  private openDialog = () => {
+    this.setState({open: true});
+  }
+
+  private closeDialog = () => {
+    this.setState({open: false});
+  }
+
+  private handleConnect = () => {
+    this.props.connect();
+
+    this.closeDialog();
+  }
+
+  private handleDisconnect = () => {
+    this.props.disconnect();
+
+    this.closeDialog();
   }
 
   private connectToChanged: React.ChangeEventHandler<HTMLInputElement> = (e) => {
@@ -80,162 +345,54 @@ class ConnectionControls extends React.Component<{
   }
 }
 
-interface ICameraControls {
-  capture: boolean
-};
+type updateSubControls = <key extends keyof IControls>(key: key, controls: IControls[key]) => void;
 
-class CameraControls extends React.Component<{
-  controls: ICameraControls,
-  updateControls: (key: keyof IControls, controls: ICameraControls) => void
-}> {
-  public render() {
-    const { controls } = this.props;
-    return (
-      <div>
-        <SwitchControl controls={controls} controlKey='capture'
-          updateControls={this.updateControls} />
-      </div>
-    )
-  }
-
-  private updateControls = (key: keyof ICameraControls, value: any) => {
-    const newControls: ICameraControls = {
-      ...this.props.controls,
-      [key]: value
-    };
-
-    this.props.updateControls('camera', newControls);
-  }
-}
-
-interface IPoseEstimationControls {
-  active: boolean,
-  imageScaleFactor: number,
-  maxPoseDetections: number,
-  nmsRadius: number,
-  outputStride: OutputStride,
-  maxDetections: number
-  scoreThreshold: number,
-};
-
-class PoseEstimationControls extends React.Component<{
-  controls: IPoseEstimationControls,
-  updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
-}> {
-  public render() {
-    const { controls } = this.props;
-    return (
-      <div>
-        <SwitchControl controls={controls} controlKey='active'
-          updateControls={this.updateControls} />
-        <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
-          min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
-        <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
-          min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
-        <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
-          min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
-        <SliderControl key="scoreThreshold" controls={controls} controlKey="scoreThreshold"
-          min={0} max={1} text="score threshold" updateControls={this.updateControls} />
-      </div>
-    )
-  }
-
-  private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
-    const newControls: IPoseEstimationControls = {
-      ...this.props.controls,
-      [key]: value
-    };
-
-    this.props.updateControls('poseEstimation', newControls);
-  }
-}
-
-interface IOutputControls {
-  showVideo: boolean,
-  showSkeleton: boolean,
-  showPoints: boolean,
-  color: string,
-  lineThickness: number,
-  minPoseConfidence: number,
-  minPartConfidence: number,
-}
-
-class OutputControls extends React.Component<{
-  controls: IOutputControls,
-  updateControls: (key: keyof IControls, controls: IOutputControls) => void
-}> {
-  public render() {
-    const { controls } = this.props;
-    return (
-      <div>
-        <SwitchControl controls={controls} controlKey='showVideo'
-          updateControls={this.updateControls} />
-        <SwitchControl controls={controls} controlKey='showSkeleton'
-          updateControls={this.updateControls} />
-        <SwitchControl controls={controls} controlKey='showPoints'
-          updateControls={this.updateControls} />
-        <SliderControl key="lineThickness" controls={controls} controlKey="lineThickness"
-          min={0} max={100} text="line thickness" updateControls={this.updateControls} />
-        <SliderControl key="minPartConfidence" controls={controls} controlKey="minPartConfidence"
-          min={0} max={1} text="min part confidence" updateControls={this.updateControls} />
-        <SliderControl key="minPoseConfidence" controls={controls} controlKey="minPoseConfidence"
-          min={0} max={1} text="min pose confidence" updateControls={this.updateControls} />
-       </div>
-    )
-  }
-
-  private updateControls = (key: keyof IOutputControls, value: any) => {
-    const newControls: IOutputControls = {
-      ...this.props.controls,
-      [key]: value
-    };
-
-    this.props.updateControls('output', newControls);
-  }
-}
-
-export interface IControls {
-  input: {
-    mobileNetArchitecture: '0.50'|'0.75'|'1.00'|'1.01',
-  },
-  camera: ICameraControls,
-  connection: IConnectionControls,
-  poseEstimation: IPoseEstimationControls,
-  output: IOutputControls,
-}
-
-interface IControlProps {
+interface IControlProps extends WithStyles<typeof styles> {
   controls: IControls,
   connection: IConnectionState,
+  video?: HTMLVideoElement,
+  model: IModelState,
+  poses?: posenet.Pose[],
   connect: () => void,
   disconnect: () => void,
   updateControls: (controls: IControls) => void
 }
 
-type updateSubControls = <key extends keyof IControls>(key: key, controls: IControls[key]) => void;
 
-export default class Controls extends React.Component<IControlProps> {
+class Controls extends React.Component<IControlProps> {
   public render() {
-    const { controls } = this.props;
+    const { poses, video, connection, controls, classes } = this.props;
 
     return (
-      <div>
-         <ConnectionControls connection={this.props.connection}
-            controls={controls.connection}
-            updateControls={this.updateSubControls} connect={this.props.connect}
-            disconnect={this.props.disconnect}
-          />
-         <Typography>Camera</Typography>
-         <CameraControls controls={controls.camera} updateControls={this.updateSubControls} />
-         {controls.camera.capture && (
-           <div>
-            <Typography>Pose Estimation</Typography>
-            <PoseEstimationControls controls={controls.poseEstimation} updateControls={this.updateSubControls} />
-          </div>
-         )}
-         <Typography>Output</Typography>
-         <OutputControls controls={controls.output} updateControls={this.updateSubControls} />
-      </div>
+      <div className={classes.fab}>
+        <ConnectionControls connection={connection}
+          controls={controls.connection}
+          updateControls={this.updateSubControls} connect={this.props.connect}
+          disconnect={this.props.disconnect}
+          classes={classes}
+/>
+      <CameraControls
+        controls={controls.camera}
+        updateControls={this.updateSubControls}
+        classes={classes}
+        video={video}
+      />
+      {video && (
+        <PoseEstimationControls
+          controls={controls.poseEstimation}
+          updateControls={this.updateSubControls}
+          model={this.props.model}
+          classes={classes}
+         />
+      )}
+      {poses && (
+        <OutputControls
+          controls={controls.output}
+          updateControls={this.updateSubControls}
+          classes={classes}
+        />
+      )}
+     </div>
     )
   }
 
@@ -246,3 +403,5 @@ export default class Controls extends React.Component<IControlProps> {
     });
   }
 }
+
+export default withStyles(styles)(Controls);

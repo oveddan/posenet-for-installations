@@ -3,12 +3,14 @@ import * as React from 'react';
 import { captureWebcamIntoVideo } from "./video";
 
 interface IWebCamCaptureProps {
+  capture: boolean,
   onError: (error: string) => void,
-  onLoaded: (video: HTMLVideoElement) => void
+  onLoaded: (video?: HTMLVideoElement) => void
 }
 
 class WebCamCapture extends React.Component<IWebCamCaptureProps> {
   private videoRef: React.RefObject<HTMLVideoElement>;
+  private stream?: MediaStream;
 
   constructor(props: IWebCamCaptureProps) {
     super(props);
@@ -16,11 +18,29 @@ class WebCamCapture extends React.Component<IWebCamCaptureProps> {
     this.videoRef = React.createRef();
   }
 
-  public async componentDidMount() {
-    const video = this.videoRef.current as HTMLVideoElement;
+  public componentDidMount() {
+    if (this.props.capture) {
+      this.captureVideo();
+    }
+  }
 
+  public componentWillReceiveProps(nextProps: IWebCamCaptureProps) {
+    if (nextProps.capture && !this.props.capture) {
+      this.captureVideo();
+    }
+    if (!nextProps.capture && this.props.capture) {
+      this.stopCapture();
+    }
+  }
+
+  public render() {
+    return (<video playsInline className="video" ref={this.videoRef} />);
+  }
+
+  private captureVideo = async () => {
+    const video = this.videoRef.current as HTMLVideoElement;
     try {
-      await captureWebcamIntoVideo(video);
+      this.stream = await captureWebcamIntoVideo(video);
 
       this.props.onLoaded(video);
     } catch (e) {
@@ -29,8 +49,14 @@ class WebCamCapture extends React.Component<IWebCamCaptureProps> {
     }
   }
 
-  public render() {
-    return (<video playsInline className="video" ref={this.videoRef} />);
+  private stopCapture = async () => {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => {
+        track.stop();
+      })
+      this.stream = undefined;
+      this.props.onLoaded(undefined);
+    }
   }
 }
 

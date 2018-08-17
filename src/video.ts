@@ -11,7 +11,7 @@ function minWidthOrValue(minWidth: number, value: number) {
   }
 }
 
-async function setupCamera(video: HTMLVideoElement): Promise<void> {
+async function setupCamera(video: HTMLVideoElement): Promise<MediaStream> {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
         'Browser API navigator.mediaDevices.getUserMedia not available');
@@ -33,12 +33,14 @@ async function setupCamera(video: HTMLVideoElement): Promise<void> {
            video.onloadedmetadata = () => {
              video.width = minWidthOrValue(640, video.videoWidth);
              video.height = minWidthOrValue(480, video.videoHeight);
-             resolve();
+             resolve(stream);
            };
-         }) as Promise<void>;
+         }) as Promise<MediaStream>;
 }
 
-export async function captureWebcamIntoVideo(video: HTMLVideoElement) {
-  await setupCamera(video);
+export async function captureWebcamIntoVideo(video: HTMLVideoElement):
+    Promise<MediaStream> {
+  const stream = await setupCamera(video);
   video.play();
+  return stream;
 }

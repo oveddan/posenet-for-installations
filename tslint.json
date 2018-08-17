@@ -10,6 +10,7 @@
   "rules": {
     "object-literal-sort-keys": false,
     "max-classes-per-file":false,
-    "jsx-boolean-value":false
+    "jsx-boolean-value":false,
+    "ordered-imports": false
   }
 }

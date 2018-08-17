@@ -6,7 +6,7 @@ interface IPosesRendererProps {
   video?: HTMLVideoElement,
   imageSize: {width: number, height: number},
   showVideo: boolean,
-  poses: posenet.Pose[],
+  poses?: posenet.Pose[],
   minPoseConfidence: number,
   minPartConfidence: number,
   showPoints: boolean,
@@ -49,17 +49,19 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
     // For each pose (i.e. person) detected in an image, loop through the
     // poses and draw the resulting skeleton and keypoints if over certain
     // confidence scores
-    this.props.poses.forEach(({score, keypoints}) => {
-      if (score >= this.props.minPoseConfidence) {
-        if (this.props.showPoints) {
-          drawKeypoints(keypoints, this.props.minPartConfidence, ctx, this.props.color);
+    if (this.props.poses) {
+      this.props.poses.forEach(({score, keypoints}) => {
+        if (score >= this.props.minPoseConfidence) {
+          if (this.props.showPoints) {
+            drawKeypoints(keypoints, this.props.minPartConfidence, ctx, this.props.color);
+          }
+          if (this.props.showSkeleton) {
+            drawSkeleton(keypoints, this.props.minPartConfidence, ctx, this.props.lineThickness,
+              this.props.color);
+          }
         }
-        if (this.props.showSkeleton) {
-          drawSkeleton(keypoints, this.props.minPartConfidence, ctx, this.props.lineThickness,
-            this.props.color);
-        }
-      }
-    });
+      });
+    }
 
     requestAnimationFrame(this.updateCanvasFrame);
   }
