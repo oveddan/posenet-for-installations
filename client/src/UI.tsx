@@ -1,6 +1,58 @@
-import { Checkbox, FormControlLabel, FormGroup, Switch, Typography } from '@material-ui/core';
+import { Checkbox, Select, FormControl, MenuItem, InputLabel, FormControlLabel, FormGroup, Switch, Typography } from '@material-ui/core';
 import { Slider } from '@material-ui/lab';
 import * as React from 'react';
+
+
+interface IDropDownControlProps<T, K extends keyof T> {
+  controls: T,
+  controlKey: K,
+  text?: string,
+  options: string[][],
+  disabled?: boolean,
+  noneOption?: boolean,
+  updateControls: (key: K, value: string) => void
+};
+
+export class DropDownControl<T, K extends keyof T> extends React.Component<IDropDownControlProps<T, K>> {
+  public render() {
+    const {controlKey, controls } = this.props;
+
+    const selectedValue = controls[controlKey] || '';
+
+    if (typeof selectedValue === 'string') {
+      return (
+        <FormControl style={{minWidth: 120}}>
+          <InputLabel htmlFor="age-simple">{this.props.text || this.props.controlKey}</InputLabel>
+          <Select
+            disabled={this.props.disabled}
+            value={selectedValue}
+            onChange={this.handleChanged}
+            inputProps={{
+              name: this.props.controlKey,
+              id: this.props.controlKey,
+            }}
+          >
+            {this.props.noneOption && (
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+            )}
+           {this.props.options.map(([key, value])=> (
+              <MenuItem key={key} value={key}>{value}</MenuItem>
+            ))}
+         </Select>
+        </FormControl>
+      )
+    } else {
+      throw new Error(`Key ${controlKey} is not a string`);
+    }
+  }
+
+  private handleChanged = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    // tslint:disable-next-line:no-debugger
+    this.props.updateControls(this.props.controlKey, event.target.value);
+  }
+}
 
 interface ICheckboxControlProps<T, K extends keyof T> {
   controls: T,

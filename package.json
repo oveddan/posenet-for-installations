@@ -21,7 +21,6 @@
     "build": "npm run build-client && npm run build-server",
     "distribute": "npm run distribute-server && npm run distribute-client",
     "build-and-distribute": "npm run build && npm run distribute",
-    "start": "concurrently -k -p \"[{name}]\" -n \"Server,Client\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run start-client\" \"npm run start-server\""
   },
   "repository": {
     "type": "git",

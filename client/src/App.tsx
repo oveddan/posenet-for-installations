@@ -62,7 +62,7 @@ const defaultAppState: IAppState = {
   model: {
     loadingStatus: 'idle'
   },
-  camera: null,
+  camera: {},
   error: null,
   imageSize: {width: 0, height: 0}
 };
@@ -113,12 +113,12 @@ class App extends React.Component<IProps, IAppState> {
           )
         }
 
-       <WebCamCapture capture={this.state.controls.camera.capture} onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
+       <WebCamCapture deviceId={this.state.controls.camera.deviceId} capture={this.state.controls.camera.capture} onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
 
-        {this.state.model.net && this.state.video && (
+        {this.state.model.net && this.state.camera.video && (
           <PoseEstimator
             net={this.state.model.net}
-            video={this.state.video}
+            video={this.state.camera.video}
             {...this.state.controls.poseEstimation}
             onPosesEstimated={this.posesEstimated}
           />
@@ -137,15 +137,15 @@ class App extends React.Component<IProps, IAppState> {
             direction="row"
             alignItems="stretch"
             >
-              {(this.state.video || this.state.connection.socket) && (
+              {(this.state.camera.video || this.state.connection.socket) && (
                 <PosesRenderer
                   poses={this.state.poses}
-                  video={this.state.video}
+                  video={this.state.camera.video}
                   imageSize={this.state.imageSize}
                   {...this.state.controls.output}
                 />
               )}
-              {(!this.state.video && !this.state.connection.socket) && (
+              {(!this.state.camera.video && !this.state.connection.socket) && (
                 <EmptyContent />
               )}
           </Grid>
@@ -157,7 +157,8 @@ class App extends React.Component<IProps, IAppState> {
         connect={this.connectToSocket}
         disconnect={this.disconnectFromSocket}
         model={this.state.model}
-        video={this.state.video}
+        camera={this.state.camera}
+        setVideoDevices={this.setVideoDevices}
         poses={this.state.poses}
       />
        </div>
@@ -169,16 +170,42 @@ class App extends React.Component<IProps, IAppState> {
 
   private webCamCaptureLoaded = (video?: HTMLVideoElement) => {
     const { width, height } = video || this.state.imageSize;
-    this.setState({video, imageSize: { width, height }});
+    this.setState(prevState => ({
+      camera: {
+        ...prevState.camera,
+        video,
+      },
+      imageSize: { width, height }
+    }));
   }
 
   private onError = (error: string) =>
     this.setState({error});
 
+  private setVideoDevices = (devices: MediaDeviceInfo[]) => {
+    this.setState(prevState => ({
+      camera: {
+        ...prevState.camera,
+        devices
+      }}));
+
+     if (devices.length > 0) {
+      this.setState(prevState => ({
+        controls: {
+          ...prevState.controls,
+          camera: {
+            ...prevState.controls.camera,
+            deviceId: devices[0].deviceId
+          }
+        }
+      }));
+    }
+  }
+
   private posesEstimated = (poses: posenet.Pose[], imageSize: {width: number, height: number}) => {
     this.setState({poses, imageSize});
 
-    const { video, connection: { socket, status } } = this.state;
+    const { camera : { video }, connection: { socket, status } } = this.state;
 
     if (socket && video && status === "open") {
       const message: IPoseMessage = {

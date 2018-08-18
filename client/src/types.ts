@@ -8,6 +8,11 @@ export interface IConnectionState {
   socket?: WebSocket, status: 'open'|'connecting'|'closed'
 }
 
+export interface ICameraState {
+  currentDevice?: MediaDeviceInfo, devices?: MediaDeviceInfo[],
+      video?: HTMLVideoElement
+}
+
 export interface IModelState {
   loadingStatus: loadingStatus, net?: posenet.PoseNet
 }
@@ -24,9 +29,13 @@ export interface IOutputControls {
       minPartConfidence: number,
 }
 
-export interface ICameraControls { capture: boolean }
+export interface ICameraControls {
+  capture: boolean, deviceId?: string
+}
 
-export interface IConnectionControls { host: string, port: string }
+export interface IConnectionControls {
+  host: string, port: string
+}
 
 export interface IControls {
   input: {
@@ -40,8 +49,7 @@ export interface IControls {
 export interface IAppState {
   controls: IControls, poses?: posenet.Pose[],
       imageSize: {width: number, height: number}, model: IModelState,
-      camera: string|null, connection: IConnectionState, error: string|null,
-      video?: HTMLVideoElement,
+      camera: ICameraState, connection: IConnectionState, error: string|null
 }
 
 export interface IPoseMessage {

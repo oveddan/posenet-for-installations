@@ -5,8 +5,8 @@ import Cast from "@material-ui/icons/Cast";
 import Videocam from "@material-ui/icons/Videocam";
 import DirectionsWalk from "@material-ui/icons/DirectionsWalk";
 import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
-import { IControls, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
-import { SliderControl, SwitchControl } from './UI';
+import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
+import { SliderControl, SwitchControl, DropDownControl } from './UI';
 import * as posenet from '@tensorflow-models/posenet';
 
 const styles = ({ spacing }: Theme) => createStyles({
@@ -26,25 +26,81 @@ const styles = ({ spacing }: Theme) => createStyles({
 
 interface ICameraControlsProps extends WithStyles<typeof styles> {
   controls: ICameraControls,
-  video?: HTMLVideoElement,
-  updateControls: (key: keyof IControls, controls: ICameraControls) => void
+  camera: ICameraState,
+  updateControls: (key: keyof IControls, controls: ICameraControls) => void,
+  setVideoDevices: (devices: MediaDeviceInfo[]) => void
 }
 
-export class CameraControls extends React.Component<ICameraControlsProps> {
+export class CameraControls extends React.Component<ICameraControlsProps, {
+  open: boolean,
+  selectedDevice?: string
+}> {
+  public state = {
+    open: false
+  };
+
+  public async componentDidMount() {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+
+    const videoDevices = devices.filter(device => device.kind === "videoinput");
+
+    this.props.setVideoDevices(videoDevices);
+  }
+
   public render() {
-    const { classes } = this.props;
+    const { controls, classes } = this.props;
+    const { currentDevice } = this.props.camera;
 
     return (
+      <span>
       <Button variant="fab"
         color={this.getButtonColor()}
         aria-label="Connect"
         className={classes.button}
-        onClick={this.toggleCapture}
+        onClick={this.openDialog}
         disabled={this.isStartingCapture}
       >
         <Videocam />
       </Button>
+        <Dialog
+          open={this.state.open || false}
+          onClose={this.closeDialog}
+          aria-labelledby="form-dialog-title"
+        >
+          <DialogTitle id="form-dialog-title">Video Capture</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {this.isCapturing && (
+                `Capturing on camera ${currentDevice}`
+              )}
+            </DialogContentText>
+
+            <DropDownControl key="imageScaleFactor" controls={controls} controlKey="deviceId"
+              text="Video Device" options={this.deviceOptions()} updateControls={this.updateControls}
+              disabled={!(!this.isCapturing && !this.isStartingCapture)}
+
+              />
+
+            <SwitchControl controls={controls} controlKey='capture'
+              updateControls={this.updateControls} disabled={this.isStartingCapture} />
+           </DialogContent>
+          <DialogActions>
+           <Button onClick={this.closeDialog} color="primary">
+              Close
+            </Button>
+         </DialogActions>
+        </Dialog>
+      </span>
     )
+  }
+
+  private deviceOptions = (): string[][] => {
+    if (!this.props.camera.devices) { return [] };
+
+    return this.props.camera.devices.map(device => (
+      [device.deviceId, device.label]
+    ));
+
   }
 
   private getButtonColor = (): "primary" | "secondary" | undefined => {
@@ -57,23 +113,29 @@ export class CameraControls extends React.Component<ICameraControlsProps> {
     return;
   }
 
+  private openDialog = () => {
+    this.setState({open: true});
+  }
+
+  private closeDialog = () => {
+    this.setState({open: false});
+  }
+
   private get isCapturing() {
-    return (this.props.controls.capture && this.props.video);
+    return (this.props.controls.capture && this.props.camera.video);
   }
 
   private get isStartingCapture() {
-    return (this.props.controls.capture && !this.props.video);
+    return (this.props.controls.capture && !this.props.camera.video);
   }
 
-  private toggleCapture = () => {
-    if (!this.isStartingCapture) {
-      const newControls: ICameraControls = {
-        ...this.props.controls,
-        capture: !this.props.controls.capture
-      };
+  private updateControls = (key: keyof ICameraControls, value: any) => {
+    const newControls: ICameraControls = {
+      ...this.props.controls,
+      [key]: value
+    };
 
-      this.props.updateControls('camera', newControls);
-    }
+    this.props.updateControls('camera', newControls);
   }
 }
 
@@ -353,18 +415,19 @@ type updateSubControls = <key extends keyof IControls>(key: key, controls: ICont
 interface IControlProps extends WithStyles<typeof styles> {
   controls: IControls,
   connection: IConnectionState,
-  video?: HTMLVideoElement,
+  camera: ICameraState,
   model: IModelState,
   poses?: posenet.Pose[],
   connect: () => void,
   disconnect: () => void,
-  updateControls: (controls: IControls) => void
+  updateControls: (controls: IControls) => void,
+  setVideoDevices: (devices: MediaDeviceInfo[]) => void
 }
 
 
 class Controls extends React.Component<IControlProps> {
   public render() {
-    const { poses, video, connection, controls, classes } = this.props;
+    const { poses, camera, connection, controls, classes } = this.props;
 
     return (
       <div className={classes.fab}>
@@ -378,9 +441,10 @@ class Controls extends React.Component<IControlProps> {
         controls={controls.camera}
         updateControls={this.updateSubControls}
         classes={classes}
-        video={video}
+        camera={camera}
+        setVideoDevices={this.props.setVideoDevices}
       />
-      {video && (
+      {camera.video && (
         <PoseEstimationControls
           controls={controls.poseEstimation}
           updateControls={this.updateSubControls}

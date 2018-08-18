@@ -4,6 +4,7 @@ import { captureWebcamIntoVideo } from "./video";
 
 interface IWebCamCaptureProps {
   capture: boolean,
+  deviceId?: string,
   onError: (error: string) => void,
   onLoaded: (video?: HTMLVideoElement) => void
 }
@@ -40,7 +41,7 @@ class WebCamCapture extends React.Component<IWebCamCaptureProps> {
   private captureVideo = async () => {
     const video = this.videoRef.current as HTMLVideoElement;
     try {
-      this.stream = await captureWebcamIntoVideo(video);
+      this.stream = await captureWebcamIntoVideo(video, this.props.deviceId);
 
       this.props.onLoaded(video);
     } catch (e) {

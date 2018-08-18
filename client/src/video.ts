@@ -11,7 +11,8 @@ function minWidthOrValue(minWidth: number, value: number) {
   }
 }
 
-async function setupCamera(video: HTMLVideoElement): Promise<MediaStream> {
+async function setupCamera(
+    video: HTMLVideoElement, deviceId?: string): Promise<MediaStream> {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
         'Browser API navigator.mediaDevices.getUserMedia not available');
@@ -21,7 +22,7 @@ async function setupCamera(video: HTMLVideoElement): Promise<MediaStream> {
   const stream = await navigator.mediaDevices.getUserMedia({
     'audio': false,
     'video': {
-      facingMode: 'user',
+      deviceId,
       width: mobile ? undefined : defaultWidth,
       height: mobile ? undefined : defaultHeight
     },
@@ -38,9 +39,11 @@ async function setupCamera(video: HTMLVideoElement): Promise<MediaStream> {
          }) as Promise<MediaStream>;
 }
 
-export async function captureWebcamIntoVideo(video: HTMLVideoElement):
-    Promise<MediaStream> {
-  const stream = await setupCamera(video);
+export async function captureWebcamIntoVideo(
+    video: HTMLVideoElement,
+    deviceId?: string,
+    ): Promise<MediaStream> {
+  const stream = await setupCamera(video, deviceId);
   video.play();
   return stream;
 }
