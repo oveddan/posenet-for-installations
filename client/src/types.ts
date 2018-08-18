@@ -49,7 +49,8 @@ export interface IControls {
 export interface IAppState {
   controls: IControls, poses?: posenet.Pose[],
       imageSize: {width: number, height: number}, model: IModelState,
-      camera: ICameraState, connection: IConnectionState, error: string|null
+      camera: ICameraState, connection: IConnectionState, error: string|null,
+      fullScreen: boolean
 }
 
 export interface IPoseMessage {

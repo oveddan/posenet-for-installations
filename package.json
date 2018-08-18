@@ -20,7 +20,7 @@
     "distribute-client": "cd client && npm run distribute",
     "build": "npm run build-client && npm run build-server",
     "distribute": "npm run distribute-server && npm run distribute-client",
-    "build-and-distribute": "npm run build && npm run distribute",
+    "build-and-distribute": "npm run build && npm run distribute"
   },
   "repository": {
     "type": "git",

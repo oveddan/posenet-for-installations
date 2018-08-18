@@ -64,6 +64,7 @@ const defaultAppState: IAppState = {
   },
   camera: {},
   error: null,
+  fullScreen: false,
   imageSize: {width: 0, height: 0}
 };
 
@@ -87,6 +88,15 @@ const EmptyContent = () => (
 
 class App extends React.Component<IProps, IAppState> {
   public state = defaultAppState;
+  private rootRef: React.RefObject<HTMLDivElement>;
+
+  constructor(props: IProps) {
+    super(props);
+
+    this.rootRef = React.createRef();
+  }
+
+
 
   public async componentDidMount() {
     // Load the PoseNet model weights with architecture 0.75
@@ -99,13 +109,14 @@ class App extends React.Component<IProps, IAppState> {
         loadingStatus: "loaded"
       }
     });
+
   }
 
   public render() {
     const { classes } = this.props;
 
     return (
-      <div className={classes.root}>
+      <div className={classes.root} ref={this.rootRef}>
         {!this.state.model.net && (
           <div id="loading">
             Loading the model...
@@ -124,7 +135,9 @@ class App extends React.Component<IProps, IAppState> {
           />
         )}
 
-        <MenuBar />
+        {!this.state.fullScreen && (
+          <MenuBar />
+        )}
 
         <Grid
           container
@@ -150,17 +163,20 @@ class App extends React.Component<IProps, IAppState> {
               )}
           </Grid>
        </Grid>
-      <Controls
-        controls={this.state.controls}
-        updateControls={this.updateControls}
-        connection={this.state.connection}
-        connect={this.connectToSocket}
-        disconnect={this.disconnectFromSocket}
-        model={this.state.model}
-        camera={this.state.camera}
-        setVideoDevices={this.setVideoDevices}
-        poses={this.state.poses}
-      />
+      {!this.state.fullScreen && (
+        <Controls
+          controls={this.state.controls}
+          updateControls={this.updateControls}
+          connection={this.state.connection}
+          connect={this.connectToSocket}
+          disconnect={this.disconnectFromSocket}
+          model={this.state.model}
+          camera={this.state.camera}
+          setVideoDevices={this.setVideoDevices}
+          poses={this.state.poses}
+          goFullScreen={this.goFullScreen}
+        />
+      )}
        </div>
     );
   }
@@ -281,6 +297,28 @@ class App extends React.Component<IProps, IAppState> {
           status: 'closed'
         }
       });
+    }
+  }
+
+  private goFullScreen = () => {
+    this.setState({
+      fullScreen: true
+    })
+
+    if (this.rootRef.current) {
+      this.rootRef.current.addEventListener("touchstart", this.exitFullScreen);
+      this.rootRef.current.addEventListener("click", this.exitFullScreen);
+    }
+
+  }
+
+  private exitFullScreen = () => {
+    this.setState({
+      fullScreen: false
+    })
+    if (this.rootRef.current) {
+      this.rootRef.current.removeEventListener("touchstart", this.exitFullScreen);
+      this.rootRef.current.removeEventListener("click", this.exitFullScreen);
     }
   }
 }

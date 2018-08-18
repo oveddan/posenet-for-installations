@@ -4,6 +4,7 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogAc
 import Cast from "@material-ui/icons/Cast";
 import Videocam from "@material-ui/icons/Videocam";
 import DirectionsWalk from "@material-ui/icons/DirectionsWalk";
+import FullScreen from "@material-ui/icons/Fullscreen";
 import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
 import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
 import { SliderControl, SwitchControl, DropDownControl } from './UI';
@@ -420,6 +421,7 @@ interface IControlProps extends WithStyles<typeof styles> {
   poses?: posenet.Pose[],
   connect: () => void,
   disconnect: () => void,
+  goFullScreen: () => void,
   updateControls: (controls: IControls) => void,
   setVideoDevices: (devices: MediaDeviceInfo[]) => void
 }
@@ -458,6 +460,11 @@ class Controls extends React.Component<IControlProps> {
           updateControls={this.updateSubControls}
           classes={classes}
         />
+      )}
+      {(camera.video || poses) && (
+        <Button variant="fab" aria-label="Go Full Screen" className={classes.button} onClick={this.props.goFullScreen}>
+          <FullScreen />
+        </Button>
       )}
      </div>
     )
