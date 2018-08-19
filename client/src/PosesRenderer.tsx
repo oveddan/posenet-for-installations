@@ -11,7 +11,8 @@ interface IPosesRendererProps {
   minPartConfidence: number,
   showPoints: boolean,
   showSkeleton: boolean,
-  color: string,
+  lineColor: string,
+  backgroundColor: string,
   lineThickness: number
 }
 
@@ -44,6 +45,9 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
       ctx.translate(-width, 0);
       ctx.drawImage(this.props.video, 0, 0, width, height);
       ctx.restore();
+    } else {
+      ctx.fillStyle = this.props.backgroundColor;
+      ctx.fillRect(0, 0, width, height);
     }
 
     // For each pose (i.e. person) detected in an image, loop through the
@@ -53,11 +57,11 @@ export default class PosesRenderer extends React.Component<IPosesRendererProps> 
       this.props.poses.forEach(({score, keypoints}) => {
         if (score >= this.props.minPoseConfidence) {
           if (this.props.showPoints) {
-            drawKeypoints(keypoints, this.props.minPartConfidence, ctx, this.props.color);
+            drawKeypoints(keypoints, this.props.minPartConfidence, ctx, this.props.lineColor, this.props.lineThickness / 2);
           }
           if (this.props.showSkeleton) {
             drawSkeleton(keypoints, this.props.minPartConfidence, ctx, this.props.lineThickness,
-              this.props.color);
+              this.props.lineColor);
           }
         }
       });

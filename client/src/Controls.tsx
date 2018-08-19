@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, createStyles, TextField, Theme, WithStyles, withStyles } from '@material-ui/core';
+import { FormControl, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, createStyles, TextField, Theme, WithStyles, withStyles, Typography } from '@material-ui/core';
 import Cast from "@material-ui/icons/Cast";
 import Videocam from "@material-ui/icons/Videocam";
 import DirectionsWalk from "@material-ui/icons/DirectionsWalk";
@@ -8,6 +8,7 @@ import FullScreen from "@material-ui/icons/Fullscreen";
 import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
 import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
 import { SliderControl, SwitchControl, DropDownControl } from './UI';
+import { CompactPicker, ColorResult } from 'react-color';
 import * as posenet from '@tensorflow-models/posenet';
 
 const styles = ({ spacing }: Theme) => createStyles({
@@ -256,10 +257,20 @@ export class OutputControls extends React.Component<IOutputControlsProps, {
               </DialogContentText>
               <SwitchControl controls={controls} controlKey='showVideo'
                 updateControls={this.updateControls} />
+              {!controls.showVideo && (
+                <FormControl>
+                  <Typography>Background Color</Typography>
+                  <CompactPicker color={this.props.controls.backgroundColor} onChange={this.changeBackgroundColor} />
+                </FormControl>
+              )}
               <SwitchControl controls={controls} controlKey='showSkeleton'
                 updateControls={this.updateControls} />
               <SwitchControl controls={controls} controlKey='showPoints'
                 updateControls={this.updateControls} />
+              <FormControl>
+                <Typography>Line Color</Typography>
+                <CompactPicker color={this.props.controls.lineColor} onChange={this.changeLineColor} />
+              </FormControl>
               <SliderControl key="lineThickness" controls={controls} controlKey="lineThickness"
                 min={0} max={100} text="line thickness" updateControls={this.updateControls} />
               <SliderControl key="minPartConfidence" controls={controls} controlKey="minPartConfidence"
@@ -291,6 +302,14 @@ export class OutputControls extends React.Component<IOutputControlsProps, {
     };
 
     this.props.updateControls('output', newControls);
+  }
+
+  private changeLineColor = (color: ColorResult) => {
+    this.updateControls('lineColor', color.hex);
+  }
+
+  private changeBackgroundColor = (color: ColorResult) => {
+    this.updateControls('backgroundColor', color.hex);
   }
 }
 

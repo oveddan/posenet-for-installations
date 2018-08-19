@@ -44,7 +44,8 @@ const defaultAppState: IAppState = {
       showVideo: true,
       showSkeleton: true,
       showPoints: true,
-      color: '#00FFFF',
+      backgroundColor: '#FFFFFF',
+      lineColor: '#00FFFF',
       lineThickness: 5,
       minPartConfidence: 0.1,
       minPoseConfidence: 0.15,
@@ -309,13 +310,13 @@ class App extends React.Component<IProps, IAppState> {
       this.rootRef.current.addEventListener("touchstart", this.exitFullScreen);
       this.rootRef.current.addEventListener("click", this.exitFullScreen);
     }
-
   }
 
   private exitFullScreen = () => {
     this.setState({
       fullScreen: false
     })
+
     if (this.rootRef.current) {
       this.rootRef.current.removeEventListener("touchstart", this.exitFullScreen);
       this.rootRef.current.removeEventListener("click", this.exitFullScreen);

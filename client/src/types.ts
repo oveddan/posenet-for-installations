@@ -24,9 +24,9 @@ export interface IPoseEstimationControls {
 }
 
 export interface IOutputControls {
-  showVideo: boolean, showSkeleton: boolean, showPoints: boolean, color: string,
-      lineThickness: number, minPoseConfidence: number,
-      minPartConfidence: number,
+  showVideo: boolean, showSkeleton: boolean, showPoints: boolean,
+      backgroundColor: string, lineColor: string, lineThickness: number,
+      minPoseConfidence: number, minPartConfidence: number,
 }
 
 export interface ICameraControls {

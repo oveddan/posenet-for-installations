@@ -64,14 +64,14 @@ export function drawSkeleton(
  */
 export function drawKeypoints(
     keypoints: posenet.Keypoint[], minConfidence: number,
-    ctx: CanvasRenderingContext2D, color: string, scale = 1) {
+    ctx: CanvasRenderingContext2D, color: string, size = 3, scale = 1) {
   for (const keypoint of keypoints) {
     if (keypoint.score < minConfidence) {
       continue;
     }
 
     const {y, x} = keypoint.position;
-    drawPoint(ctx, y * scale, x * scale, 3, color);
+    drawPoint(ctx, y * scale, x * scale, size, color);
   }
 }
 
