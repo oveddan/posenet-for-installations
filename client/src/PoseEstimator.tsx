@@ -1,10 +1,10 @@
 import * as posenet from '@tensorflow-models/posenet';
 import * as React from 'react';
-import { OutputStride } from './types';
+import { OutputStride, IModelState } from './types';
 
 
 interface IPoseEstimatorProps {
-  net: posenet.PoseNet,
+  model: IModelState,
   video: HTMLVideoElement,
   active: boolean,
   outputStride: OutputStride,
@@ -27,9 +27,9 @@ export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
   }
 
   private poseDetectionFrame = async () => {
-    const { active, net } = this.props;
+    const { active, model: { net, loadingStatus }}  = this.props;
 
-    if (active) {
+    if (net && active && loadingStatus === "loaded") {
       const poses = await net.estimateMultiplePoses(this.props.video, this.props.imageScaleFactor,
         flipHorizontal, this.props.outputStride, this.props.maxDetections, this.props.scoreThreshold,
         this.props.nmsRadius);

@@ -57,7 +57,8 @@ const defaultAppState: IAppState = {
       nmsRadius: 30.0,
       outputStride: 16,
       maxDetections: 5,
-      scoreThreshold: 0.1
+      scoreThreshold: 0.1,
+      modelMultiplier: '0.75'
     },
   },
   model: {
@@ -100,17 +101,7 @@ class App extends React.Component<IProps, IAppState> {
 
 
   public async componentDidMount() {
-    // Load the PoseNet model weights with architecture 0.75
-    const net = await loadModel(0.75);
-
-    this.setState({
-      model: {
-        ...this.state.model,
-        net,
-        loadingStatus: "loaded"
-      }
-    });
-
+    this.setAndLoadModel(this.state.controls.poseEstimation.modelMultiplier);
   }
 
   public render() {
@@ -127,9 +118,10 @@ class App extends React.Component<IProps, IAppState> {
 
        <WebCamCapture deviceId={this.state.controls.camera.deviceId} capture={this.state.controls.camera.capture} onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
 
-        {this.state.model.net && this.state.camera.video && (
+        {(this.state.model.net
+          && this.state.camera.video) && (
           <PoseEstimator
-            net={this.state.model.net}
+            model={this.state.model}
             video={this.state.camera.video}
             {...this.state.controls.poseEstimation}
             onPosesEstimated={this.posesEstimated}
@@ -176,6 +168,7 @@ class App extends React.Component<IProps, IAppState> {
           setVideoDevices={this.setVideoDevices}
           poses={this.state.poses}
           goFullScreen={this.goFullScreen}
+          setAndLoadModel={this.setAndLoadModel}
         />
       )}
        </div>
@@ -321,6 +314,33 @@ class App extends React.Component<IProps, IAppState> {
       this.rootRef.current.removeEventListener("touchstart", this.exitFullScreen);
       this.rootRef.current.removeEventListener("click", this.exitFullScreen);
     }
+  }
+
+  private setAndLoadModel = async (multiplier: string) => {
+    // tslint:disable-next-line:no-debugger
+    this.setState(prevState => ({
+      ...prevState,
+      model: {
+        ...prevState.model,
+        loadingStatus: "loading"
+      }
+    }));
+    // Load the PoseNet model weights with architecture 0.75
+    if (this.state.model.net) {
+      this.state.model.net.dispose();
+    }
+
+    const net = await loadModel(Number(multiplier) as posenet.MobileNetMultiplier);
+
+    this.setState({
+      model: {
+        ...this.state.model,
+        net,
+        loadingStatus: "loaded"
+      }
+    });
+
+
   }
 }
 

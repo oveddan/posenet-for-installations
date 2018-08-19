@@ -145,6 +145,7 @@ export class CameraControls extends React.Component<ICameraControlsProps, {
 interface IPoseEstimationControlsProps extends WithStyles<typeof styles> {
   controls: IPoseEstimationControls,
   model: IModelState,
+  setAndLoadModel: (multipler: string) => void
   updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
 };
 
@@ -184,6 +185,10 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
                 "Error loading the model..."
               )}
             </DialogContentText>
+            <DropDownControl key="modelMultiplier" controls={controls} controlKey="modelMultiplier"
+              text="Model" options={this.modelOptions()} updateControls={this.updateModelMultiplier}
+              disabled={loadingStatus === 'loading'}
+            />
             <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
               min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
             <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
@@ -206,12 +211,22 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
     )
   }
 
+  private modelOptions(): string[][] {
+    return [['0.50', '0.50'], ['0.75', '0.75'], ['1.00', '1.00'], ['1.01', '1.01']];
+  }
+
   private openDialog = () => {
     this.setState({open: true});
   }
 
   private closeDialog = () => {
     this.setState({open: false});
+  }
+
+  private updateModelMultiplier = (key: keyof IPoseEstimationControls, multiplier: string) => {
+    this.updateControls(key, multiplier);
+
+    this.props.setAndLoadModel(multiplier);
   }
 
   private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
@@ -442,7 +457,8 @@ interface IControlProps extends WithStyles<typeof styles> {
   disconnect: () => void,
   goFullScreen: () => void,
   updateControls: (controls: IControls) => void,
-  setVideoDevices: (devices: MediaDeviceInfo[]) => void
+  setVideoDevices: (devices: MediaDeviceInfo[]) => void,
+  setAndLoadModel: (multipler: string) => void
 }
 
 
@@ -470,6 +486,7 @@ class Controls extends React.Component<IControlProps> {
           controls={controls.poseEstimation}
           updateControls={this.updateSubControls}
           model={this.props.model}
+          setAndLoadModel={this.props.setAndLoadModel}
           classes={classes}
          />
       )}
