@@ -18,8 +18,15 @@ interface IPoseEstimatorProps {
 const flipHorizontal = true;
 
 export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
+  private mounted?: boolean
+
   public componentDidMount() {
+    this.mounted = true;
     this.poseDetectionFrame();
+  }
+
+  public componentWillUnmount() {
+    this.mounted = false;
   }
 
   public render() {
@@ -38,6 +45,8 @@ export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
       this.props.onPosesEstimated(poses, { width, height });
    }
 
-    requestAnimationFrame(this.poseDetectionFrame);
+    if (this.mounted) {
+      requestAnimationFrame(this.poseDetectionFrame);
+    }
   }
 }

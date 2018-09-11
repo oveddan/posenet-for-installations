@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "/Users/danoved/Library/Arduino15/packages/arduino/tools/**",
+                "/Users/danoved/Library/Arduino15/packages/arduino/hardware/samd/1.6.17/**"
+            ],
+            "forcedInclude": [
+                "/Users/danoved/Library/Arduino15/packages/arduino/hardware/samd/1.6.17/cores/arduino/Arduino.h"
+            ]
+        }
+    ]
+}
