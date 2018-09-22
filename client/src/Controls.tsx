@@ -189,6 +189,10 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
               text="Model" options={this.modelOptions()} updateControls={this.updateModelMultiplier}
               disabled={loadingStatus === 'loading'}
             />
+            <DropDownControl key="outputStride" controls={controls} controlKey="outputStride"
+              text="Output Stride" options={this.outputStrideOptions()} updateControls={this.updateOutputStride}
+              disabled={loadingStatus === 'loading'}
+            />
             <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
               min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
             <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
@@ -215,6 +219,10 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
     return [['0.50', '0.50'], ['0.75', '0.75'], ['1.00', '1.00'], ['1.01', '1.01']];
   }
 
+  private outputStrideOptions(): string[][] {
+    return [['8', '8'], ['16', '16']];
+  }
+
   private openDialog = () => {
     this.setState({open: true});
   }
@@ -228,6 +236,11 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
 
     this.props.setAndLoadModel(multiplier);
   }
+
+  private updateOutputStride = (key: keyof IPoseEstimationControls, outputStride: string) => {
+    this.updateControls(key, outputStride);
+  }
+
 
   private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
     const newControls: IPoseEstimationControls = {

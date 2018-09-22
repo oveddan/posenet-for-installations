@@ -19,7 +19,7 @@ export interface IModelState {
 
 export interface IPoseEstimationControls {
   active: boolean, imageScaleFactor: number, maxPoseDetections: number,
-      nmsRadius: number, outputStride: OutputStride, maxDetections: number
+      nmsRadius: number, outputStride: '8'|'16', maxDetections: number
   scoreThreshold: number, modelMultiplier: string
 }
 

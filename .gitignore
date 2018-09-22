@@ -26,3 +26,5 @@ yarn-error.log
 **/*/dist
 **/*/build
 **/*/*.exe
+client/posenet
+server/posenetSocket

@@ -55,7 +55,7 @@ const defaultAppState: IAppState = {
       imageScaleFactor: 0.5,
       maxPoseDetections: 5,
       nmsRadius: 30.0,
-      outputStride: 16,
+      outputStride: '16',
       maxDetections: 5,
       scoreThreshold: 0.1,
       modelMultiplier: '0.75'
