@@ -207,7 +207,7 @@ When poses are estimated, they are broadcast over the websocket to all subscribe
 
 Run the command to create an executable of the application and server:
 
-    yarn build-and-distributabe
+    yarn build-and-distribute
 
 Copy client/posenet.exe and server/posenetServer.exe to the destination directory.
 
