@@ -8,7 +8,13 @@
             ],
             "forcedInclude": [
                 "/Users/danoved/Library/Arduino15/packages/arduino/hardware/samd/1.6.17/cores/arduino/Arduino.h"
-            ]
+            ],
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "intelliSenseMode": "clang-x64"
         }
-    ]
+    ],
+    "version": 4
 }

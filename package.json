@@ -12,6 +12,7 @@
     "typescript": "^3.0.1"
   },
   "scripts": {
+    "setup": "yarn && cd client && yarn && cd ../server && yarn",
     "build-client": "cd client && npm run build",
     "start-client": "cd client && npm start",
     "build-server": "cd server && npm run build",
