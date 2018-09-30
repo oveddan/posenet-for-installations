@@ -18,16 +18,18 @@
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
     "serve": "node serve.js",
+    "download-models": "node downloadModels.js",
     "distribute": "node distribute.js"
   },
   "devDependencies": {
     "@types/node": "^10.7.0",
     "@types/react": "^16.4.10",
-    "@types/react-dom": "^16.0.7",
     "@types/react-color": "^2.13.6",
+    "@types/react-dom": "^16.0.7",
     "nexe": "^2.0.0-rc.34",
-    "typescript": "^3.0.1",
     "react-scripts-ts": "2.17.0",
-    "serve-handler": "^4.0.1"
+    "serve-handler": "^4.0.1",
+    "typescript": "^3.0.1",
+    "mkdirp": "^0.5.1"
   }
 }

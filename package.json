@@ -17,6 +17,8 @@
     "start-client": "cd client && npm start",
     "build-server": "cd server && npm run build",
     "start-server": "cd server && npm start",
+    "start": "npm run start-client & npm run start-server",
+    "download-models": "cd client && npm run download-models",
     "distribute-server": "cd server && npm run distribute",
     "distribute-client": "cd client && npm run distribute",
     "build": "npm run build-client && npm run build-server",

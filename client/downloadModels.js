@@ -1,8 +1,8 @@
 const MANIFEST_FILE = 'manifest.json';
-import * as fs from 'fs';
-import * as https from 'https';
-import {join} from 'path';
-import * as mkdirp from 'mkdirp';
+const fs = require('fs');
+const https = require('https');
+const {join} = require('path');
+const mkdirp = require('mkdirp');
 
 function getFile(url) {
   console.log('downloading file at ' + url);
