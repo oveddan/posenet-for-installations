@@ -38,6 +38,17 @@ To just start the application (if you don't want to broadcast the poses over web
 
     yarn start-client
 
+
+#### To bundle as a distributable:
+
+Run the command to create an executable of the application and server:
+
+    yarn build-and-distributabe
+
+Copy client/posenet.exe and server/posenetServer.exe to the destination directory.
+
+*TODO:* add a flag that allows changing the target OS.
+
 ## Development
 
 If you want to develop the code, it is strongly recommended to use [VSCode](https://code.visualstudio.com/), as that
