@@ -76,7 +76,7 @@ const MenuBar = () => (
   <AppBar position="static" color="default">
     <Toolbar>
       <Typography variant="title" color="inherit">
-        PoseNet Chat
+        PoseNet
       </Typography>
     </Toolbar>
   </AppBar>
