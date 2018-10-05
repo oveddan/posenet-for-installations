@@ -92,7 +92,7 @@ const checkpointSubfolders = [
 async function downloadCheckpointFromSubfolder(subfolder) {
   await downloadCheckpoint(
       GOOGLE_CLOUD_STORAGE_DIR + subfolder,
-      join(__dirname, 'models', subfolder));
+      join(__dirname, 'public/models', subfolder));
 }
 
 const checkpointDownloads = checkpointSubfolders.map(
