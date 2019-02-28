@@ -9,7 +9,7 @@ interface IPoseEstimatorProps {
   active: boolean,
   outputStride: string,
   imageScaleFactor: number,
-  maxDetections: number,
+  maxPoseDetections: number,
   scoreThreshold: number,
   nmsRadius: number,
   onPosesEstimated: (poses: posenet.Pose[], imageSize: {width: number, height: number}) => void
@@ -38,7 +38,7 @@ export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
 
     if (net && active && loadingStatus === "loaded") {
       const poses = await net.estimateMultiplePoses(this.props.video, this.props.imageScaleFactor,
-        flipHorizontal, Number(this.props.outputStride) as OutputStride, this.props.maxDetections, this.props.scoreThreshold,
+        flipHorizontal, Number(this.props.outputStride) as OutputStride, this.props.maxPoseDetections, this.props.scoreThreshold,
         this.props.nmsRadius);
 
       const { width, height } = this.props.video;

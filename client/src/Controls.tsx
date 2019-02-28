@@ -195,7 +195,7 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
             />
             <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
               min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
-            <SliderControl key="maxDetections" controls={controls} controlKey="maxPoseDetections"
+            <SliderControl key="maxPoseDetections" controls={controls} controlKey="maxPoseDetections"
               min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
             <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
               min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
