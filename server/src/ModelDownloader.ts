@@ -4,6 +4,7 @@ import * as https from 'https';
 import {IncomingMessage} from 'http';
 import {join} from 'path';
 import * as mkdirp from 'mkdirp';
+const {createGunzip} = require('gunzip-stream');
 
 function getFile(url: string) {
   console.log('downloading file at ' + url);
@@ -18,7 +19,7 @@ function saveFile(downloadStream: IncomingMessage, fileName: string) {
   const file = fs.createWriteStream(fileName);
 
   return new Promise<void>((resolve, reject) => {
-    const pipe = downloadStream.pipe(file);
+    const pipe = downloadStream.pipe(createGunzip()).pipe(file);
 
     pipe.on('close', resolve);
   })

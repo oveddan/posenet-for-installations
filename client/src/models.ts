@@ -1,40 +1,27 @@
-import * as posenet from '@tensorflow-models/posenet';
+import {load, PoseNet} from '@tensorflow-models/posenet';
+import {ModelConfig} from '@tensorflow-models/posenet/dist/posenet_model';
 
-const BASE_URL = '/models/';
+import {CheckpointConfig, mobileNetCheckpoint, resNet50Checkpoint} from './checkpoints';
 
-export const checkpoints: {[multiplier: number]: posenet.Checkpoint} = {
-  1.01: {
-    url: BASE_URL + 'mobilenet_v1_101/',
-    architecture: posenet.mobileNetArchitectures[100]
-  },
-  1.0: {
-    url: BASE_URL + 'mobilenet_v1_100/',
-    architecture: posenet.mobileNetArchitectures[100]
-  },
-  0.75: {
-    url: BASE_URL + 'mobilenet_v1_075/',
-    architecture: posenet.mobileNetArchitectures[75]
-  },
-  0.5: {
-    url: BASE_URL + 'mobilenet_v1_050/',
-    architecture: posenet.mobileNetArchitectures[50]
+const getCheckpointConfig = (config: ModelConfig): CheckpointConfig => {
+  if (config.architecture === 'MobileNetV1') {
+    return mobileNetCheckpoint(
+        config.outputStride, config.multiplier || 1.0, config.quantBytes || 4);
+  } else {
+    return resNet50Checkpoint(config.outputStride, config.quantBytes || 4);
   }
 };
 
-export async function loadModel(multiplier: posenet.MobileNetMultiplier):
-    Promise<posenet.PoseNet> {
-  const mobileNetModel = await loadMobileNetModel(multiplier);
+const getUrl = (config: ModelConfig): string => {
+  const {baseUrl, folder, graphJson} = getCheckpointConfig(config);
 
-  return new posenet.PoseNet(mobileNetModel);
-}
+  return baseUrl + folder + graphJson;
+};
 
-async function loadMobileNetModel(multiplier: posenet.MobileNetMultiplier):
-    Promise<posenet.MobileNet> {
-  const checkpoint = checkpoints[multiplier];
+export async function loadModel(config: ModelConfig): Promise<PoseNet> {
+  const modelUrl = getUrl(config);
 
-  const checkpointLoader = new posenet.CheckpointLoader(checkpoint.url);
+  const modelConfigWithLocalUrl: ModelConfig = {...config, modelUrl};
 
-  const variables = await checkpointLoader.getAllVariables();
-
-  return new posenet.MobileNet(variables, checkpoint.architecture);
-}
+  return await load(modelConfigWithLocalUrl);
+};

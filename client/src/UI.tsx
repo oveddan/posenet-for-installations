@@ -15,17 +15,12 @@ interface IDropDownControlProps<T, K extends keyof T> {
 
 export class DropDownControl<T, K extends keyof T> extends React.Component<IDropDownControlProps<T, K>> {
   public render() {
-    const {controlKey, controls } = this.props;
-
-    const selectedValue = controls[controlKey] || '';
-
-    if (typeof selectedValue === 'string') {
       return (
         <FormControl style={{minWidth: 120}}>
           <InputLabel htmlFor="age-simple">{this.props.text || this.props.controlKey}</InputLabel>
           <Select
             disabled={this.props.disabled}
-            value={selectedValue}
+            value={this.getSelectedValue()}
             onChange={this.handleChanged}
             inputProps={{
               name: this.props.controlKey,
@@ -43,8 +38,20 @@ export class DropDownControl<T, K extends keyof T> extends React.Component<IDrop
          </Select>
         </FormControl>
       )
+
+  }
+
+  private getSelectedValue = (): string => {
+    const {controlKey, controls } = this.props;
+
+    const selectedValue = controls[controlKey] || '';
+
+    if (typeof selectedValue === 'string') {
+      return selectedValue;
+    } else if (typeof selectedValue === 'number') {
+      return selectedValue.toString();
     } else {
-      throw new Error(`Key ${controlKey} is not a string`);
+      throw new Error('value of ' + selectedValue + ' could not be converted to a string');
     }
   }
 

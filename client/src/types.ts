@@ -1,4 +1,6 @@
 import * as posenet from '@tensorflow-models/posenet';
+import {MobileNetMultiplier} from '@tensorflow-models/posenet';
+import {PoseNetArchitecture, PoseNetInputResolution} from '@tensorflow-models/posenet/dist/posenet_model';
 
 export type OutputStride = 8|16|32;
 
@@ -17,10 +19,15 @@ export interface IModelState {
   loadingStatus: loadingStatus, net?: posenet.PoseNet
 }
 
+export interface IModelControls {
+  architecture: PoseNetArchitecture, modelMultiplier: MobileNetMultiplier,
+      inputResolution: PoseNetInputResolution,
+      outputStride: posenet.PoseNetOutputStride
+}
+
 export interface IPoseEstimationControls {
-  active: boolean, imageScaleFactor: number, maxPoseDetections: number,
-      nmsRadius: number, outputStride: '8'|'16', maxDetections: number
-  scoreThreshold: number, modelMultiplier: string
+  active: boolean, maxPoseDetections: number, nmsRadius: number,
+      scoreThreshold: number
 }
 
 export interface IOutputControls {
@@ -37,14 +44,14 @@ export interface IConnectionControls {
   host: string, port: string
 }
 
-export interface IControls {
-  input: {
-    mobileNetArchitecture: '0.50'|'0.75'|'1.00'|'1.01',
-  },
-      camera: ICameraControls, connection: IConnectionControls,
-      poseEstimation: IPoseEstimationControls, output: IOutputControls,
-}
+// export type PoseNetInputResolution =
+//     161|193|257|289|321|353|385|417|449|481|513|801|1217;
 
+export interface IControls {
+  camera: ICameraControls, connection: IConnectionControls,
+      model: IModelControls, poseEstimation: IPoseEstimationControls,
+      output: IOutputControls,
+}
 
 export interface IAppState {
   controls: IControls, poses?: posenet.Pose[],

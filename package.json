@@ -8,7 +8,7 @@
     "serve": "^9.6.0"
   },
   "devDependencies": {
-    "typescript": "^3.0.1"
+    "typescript": "^3.5.3"
   },
   "scripts": {
     "setup": "yarn && cd client && yarn && cd ../server && yarn",

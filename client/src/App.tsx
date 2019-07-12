@@ -6,10 +6,10 @@ import { AppBar, createStyles, Grid, Theme, Toolbar, Typography, withStyles, Wit
 import Controls from "./Controls";
 import { PoseEstimator } from "./PoseEstimator";
 import PosesRenderer from "./PosesRenderer";
-import {isMobile} from './util';
 import { IAppState, IControls, IPoseMessage, } from './types'
 import WebCamCapture from "./WebCamCapture";
-import { loadModel } from './models';
+import { loadModel } from "./models";
+// import { loadModel } from './models';
 
 
 const styles = ({ palette, spacing }: Theme) => createStyles({
@@ -30,9 +30,6 @@ const defaultAppState: IAppState = {
     status: 'closed'
   },
   controls: {
-    input: {
-      mobileNetArchitecture: isMobile() ? '0.50' : '0.75',
-    },
     camera: {
       capture: false
     },
@@ -50,16 +47,18 @@ const defaultAppState: IAppState = {
       minPartConfidence: 0.1,
       minPoseConfidence: 0.15,
     },
+    model: {
+      architecture: "MobileNetV1",
+      modelMultiplier: 1,
+      inputResolution: 513,
+      outputStride: 16
+    },
     poseEstimation: {
       active: false,
-      imageScaleFactor: 0.5,
       maxPoseDetections: 5,
       nmsRadius: 30.0,
-      outputStride: '16',
-      maxDetections: 5,
       scoreThreshold: 0.1,
-      modelMultiplier: '0.75'
-    },
+   },
   },
   model: {
     loadingStatus: 'idle'
@@ -98,10 +97,15 @@ class App extends React.Component<IProps, IAppState> {
     this.rootRef = React.createRef();
   }
 
+  public componentDidMount() {
+    this.loadModel();
+  }
 
-
-  public async componentDidMount() {
-    this.setAndLoadModel(this.state.controls.poseEstimation.modelMultiplier);
+  public componentDidUpdate(prevProps: IProps, prevState: IAppState) {
+    // tslint:disable-next-line:no-console
+    if (prevState.controls.model !== this.state.controls.model) {
+      this.loadModel();
+    }
   }
 
   public render() {
@@ -168,7 +172,6 @@ class App extends React.Component<IProps, IAppState> {
           setVideoDevices={this.setVideoDevices}
           poses={this.state.poses}
           goFullScreen={this.goFullScreen}
-          setAndLoadModel={this.setAndLoadModel}
         />
       )}
        </div>
@@ -316,8 +319,15 @@ class App extends React.Component<IProps, IAppState> {
     }
   }
 
-  private setAndLoadModel = async (multiplier: string) => {
+  private loadModel = async () => {
     // tslint:disable-next-line:no-debugger
+    if (this.state.model.loadingStatus === 'loading') {
+      return;
+    }
+
+    // tslint:disable-next-line:no-console
+    console.log('loading the model...');
+
     this.setState(prevState => ({
       ...prevState,
       model: {
@@ -330,7 +340,7 @@ class App extends React.Component<IProps, IAppState> {
       this.state.model.net.dispose();
     }
 
-    const net = await loadModel(Number(multiplier) as posenet.MobileNetMultiplier);
+    const net = await loadModel(this.state.controls.model);
 
     this.setState({
       model: {

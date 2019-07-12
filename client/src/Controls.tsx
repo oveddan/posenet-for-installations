@@ -6,7 +6,7 @@ import Videocam from "@material-ui/icons/Videocam";
 import DirectionsWalk from "@material-ui/icons/DirectionsWalk";
 import FullScreen from "@material-ui/icons/Fullscreen";
 import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
-import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState } from "./types";
+import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState, IModelControls } from "./types";
 import { SliderControl, SwitchControl, DropDownControl } from './UI';
 import { CompactPicker, ColorResult } from 'react-color';
 import * as posenet from '@tensorflow-models/posenet';
@@ -77,10 +77,9 @@ export class CameraControls extends React.Component<ICameraControlsProps, {
               )}
             </DialogContentText>
 
-            <DropDownControl key="imageScaleFactor" controls={controls} controlKey="deviceId"
+            <DropDownControl key="deviceId" controls={controls} controlKey="deviceId"
               text="Video Device" options={this.deviceOptions()} updateControls={this.updateControls}
               disabled={!(!this.isCapturing && !this.isStartingCapture)}
-
               />
 
             <SwitchControl controls={controls} controlKey='capture'
@@ -143,10 +142,10 @@ export class CameraControls extends React.Component<ICameraControlsProps, {
 
 
 interface IPoseEstimationControlsProps extends WithStyles<typeof styles> {
-  controls: IPoseEstimationControls,
+  poseEstimationControls: IPoseEstimationControls,
+  modelControls: IModelControls,
   model: IModelState,
-  setAndLoadModel: (multipler: string) => void
-  updateControls: (key: keyof IControls, controls: IPoseEstimationControls) => void
+  updateControls: (key: keyof IControls, controls: IPoseEstimationControls| IModelControls) => void
 };
 
 export class PoseEstimationControls extends React.Component<IPoseEstimationControlsProps, {
@@ -157,10 +156,10 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
   };
 
   public render() {
-    const { controls, model: { loadingStatus }, classes } = this.props;
+    const { modelControls, poseEstimationControls, model: { loadingStatus }, classes } = this.props;
     return (
       <span>
-        <Button variant="fab" color={controls.active ? "primary" : undefined} aria-label="Estimate"
+        <Button variant="fab" color={poseEstimationControls.active ? "primary" : undefined} aria-label="Estimate"
           className={classes.button} onClick={this.openDialog}>
           <DirectionsWalk />
         </Button>
@@ -172,38 +171,44 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
           <DialogTitle id="form-dialog-title">Pose Estimation</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {controls.active && (
+              {poseEstimationControls.active && (
                 "Estimating Poses"
               )}
-              {!controls.active && loadingStatus === "idle" && (
+              {!poseEstimationControls.active && loadingStatus === "idle" && (
                 "Load the model and estimate poses"
               )}
-              {!controls.active && loadingStatus === "loading" && (
+              {!poseEstimationControls.active && loadingStatus === "loading" && (
                 "Loading the model..."
               )}
-              {!controls.active && loadingStatus === "error" && (
+              {!poseEstimationControls.active && loadingStatus === "error" && (
                 "Error loading the model..."
               )}
             </DialogContentText>
-            <DropDownControl key="modelMultiplier" controls={controls} controlKey="modelMultiplier"
-              text="Model" options={this.modelOptions()} updateControls={this.updateModelMultiplier}
+            <DropDownControl key="architecture" controls={modelControls} controlKey="architecture"
+              text="Input Resolution" options={this.architectureOptions()} updateControls={this.updateModelControls}
               disabled={loadingStatus === 'loading'}
             />
-            <DropDownControl key="outputStride" controls={controls} controlKey="outputStride"
+            <DropDownControl key="modelMultiplier" controls={modelControls} controlKey="modelMultiplier"
+              text="Model Multiplier" options={this.multiplierOptions()} updateControls={this.updateModelMultiplier}
+              disabled={loadingStatus === 'loading'}
+            />
+            <DropDownControl key="outputStride" controls={modelControls} controlKey="outputStride"
               text="Output Stride" options={this.outputStrideOptions()} updateControls={this.updateOutputStride}
               disabled={loadingStatus === 'loading'}
             />
-            <SliderControl key="imageScaleFactor" controls={controls} controlKey="imageScaleFactor"
-              min={0.2} max={1} text="image scale factor" updateControls={this.updateControls} />
-            <SliderControl key="maxPoseDetections" controls={controls} controlKey="maxPoseDetections"
-              min={0} max={20} step={1} text="max pose detections" updateControls={this.updateControls} />
-            <SliderControl key="nmsRadius" controls={controls} controlKey="nmsRadius"
-              min={0} max={100} step={1} text="nms radius" updateControls={this.updateControls} />
-            <SliderControl key="scoreThreshold" controls={controls} controlKey="scoreThreshold"
-              min={0} max={1} text="score threshold" updateControls={this.updateControls} />
+            <DropDownControl key="inputResolution" controls={modelControls} controlKey="inputResolution"
+              text="Input Resolution" options={this.inputResolutionOptions()} updateControls={this.updateInputResolution}
+              disabled={loadingStatus === 'loading'}
+            />
+            <SliderControl key="maxPoseDetections" controls={poseEstimationControls} controlKey="maxPoseDetections"
+              min={0} max={20} step={1} text="max pose detections" updateControls={this.updatePoseEstimationControls} />
+            <SliderControl key="nmsRadius" controls={poseEstimationControls} controlKey="nmsRadius"
+              min={0} max={100} step={1} text="nms radius" updateControls={this.updatePoseEstimationControls} />
+            <SliderControl key="scoreThreshold" controls={poseEstimationControls} controlKey="scoreThreshold"
+              min={0} max={1} text="score threshold" updateControls={this.updatePoseEstimationControls} />
 
-            <SwitchControl controls={controls} controlKey='active'
-              updateControls={this.updateControls} disabled={loadingStatus !== 'loaded'} />
+            <SwitchControl controls={poseEstimationControls} controlKey='active'
+              updateControls={this.updatePoseEstimationControls} disabled={loadingStatus !== 'loaded'} />
            </DialogContent>
           <DialogActions>
            <Button onClick={this.closeDialog} color="primary">
@@ -215,12 +220,31 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
     )
   }
 
-  private modelOptions(): string[][] {
-    return [['0.50', '0.50'], ['0.75', '0.75'], ['1.00', '1.00'], ['1.01', '1.01']];
+  private architectureOptions(): string[][] {
+    return [['MobileNetV1', 'MobileNetV1'], ['ResNet50', 'ResNet50']];
+  }
+
+  private multiplierOptions(): string[][] {
+    const { architecture } = this.props.modelControls;
+
+    if (architecture === 'ResNet50') {
+      return [['1', '1.00']];
+    } else {
+      return [['0.5', '0.50'], ['0.75', '0.75'], ['1', '1.00']];
+    }
   }
 
   private outputStrideOptions(): string[][] {
-    return [['8', '8'], ['16', '16']];
+    const { architecture } = this.props.modelControls;
+    if (architecture === 'ResNet50') {
+      return [['16', '16'], ['32', '32']];
+    } else {
+      return [['8', '8'], ['16', '16']];
+    }
+  }
+
+  private inputResolutionOptions(): string[][] {
+    return ([161, 193, 257, 289, 321, 353, 385, 417, 449, 481, 513, 801, 1217]).map(x => [x.toString(), x.toString()]);
   }
 
   private openDialog = () => {
@@ -231,20 +255,52 @@ export class PoseEstimationControls extends React.Component<IPoseEstimationContr
     this.setState({open: false});
   }
 
-  private updateModelMultiplier = (key: keyof IPoseEstimationControls, multiplier: string) => {
-    this.updateControls(key, multiplier);
+  private updateArchitecture = (key: keyof IModelControls, architecture: string) => {
+    let { modelMultiplier, outputStride } = this.props.modelControls
 
-    this.props.setAndLoadModel(multiplier);
+    if (architecture === 'ResNet50') {
+      modelMultiplier = 1;
+      if (outputStride === 8) {
+        outputStride = 16
+      }
+    } else if (architecture === 'MobileNetV1') {
+      if (outputStride === 32)  {
+        outputStride = 16
+      }
+    }
+
+    const newControls: IModelControls = {
+      ...this.props.modelControls,
+      modelMultiplier,
+      outputStride,
+      architecture
+    };
   }
 
-  private updateOutputStride = (key: keyof IPoseEstimationControls, outputStride: string) => {
-    this.updateControls(key, outputStride);
+  private updateModelMultiplier = (key: keyof IModelControls, multiplier: string) => {
+    this.updateModelControls(key, +multiplier);
+  }
+
+  private updateOutputStride = (key: keyof IModelControls, outputStride: string) => {
+    this.updateModelControls(key, +outputStride);
+  }
+  private updateInputResolution = (key: keyof IModelControls, inputResolution: string) => {
+    this.updateModelControls(key, +inputResolution);
+  }
+
+  private updateModelControls = (key: keyof IModelControls, value: any) => {
+    const newControls: IModelControls = {
+      ...this.props.modelControls,
+      [key]: value
+    };
+
+    this.props.updateControls('model', newControls);
   }
 
 
-  private updateControls = (key: keyof IPoseEstimationControls, value: any) => {
+  private updatePoseEstimationControls = (key: keyof IPoseEstimationControls, value: any) => {
     const newControls: IPoseEstimationControls = {
-      ...this.props.controls,
+      ...this.props.poseEstimationControls,
       [key]: value
     };
 
@@ -470,8 +526,7 @@ interface IControlProps extends WithStyles<typeof styles> {
   disconnect: () => void,
   goFullScreen: () => void,
   updateControls: (controls: IControls) => void,
-  setVideoDevices: (devices: MediaDeviceInfo[]) => void,
-  setAndLoadModel: (multipler: string) => void
+  setVideoDevices: (devices: MediaDeviceInfo[]) => void
 }
 
 
@@ -496,10 +551,10 @@ class Controls extends React.Component<IControlProps> {
       />
       {camera.video && (
         <PoseEstimationControls
-          controls={controls.poseEstimation}
+          poseEstimationControls={controls.poseEstimation}
+          modelControls={controls.model}
           updateControls={this.updateSubControls}
           model={this.props.model}
-          setAndLoadModel={this.props.setAndLoadModel}
           classes={classes}
          />
       )}
