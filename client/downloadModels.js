@@ -3,6 +3,7 @@ const fs = require('fs');
 const https = require('https');
 const {join} = require('path');
 const mkdirp = require('mkdirp');
+const {createGunzip} = require('zlib');
 
 function getFile(url) {
   console.log('downloading file at ' + url);
@@ -17,7 +18,7 @@ function saveFile(downloadStream, fileName) {
   const file = fs.createWriteStream(fileName);
 
   return new Promise((resolve, reject) => {
-    const pipe = downloadStream.pipe(file);
+    const pipe = downloadStream.pipe(createGunzip()).pipe(file);
 
     pipe.on('close', resolve);
   })
