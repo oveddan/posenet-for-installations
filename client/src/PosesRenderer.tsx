@@ -1,4 +1,4 @@
-import * as posenet from '@tensorflow-models/posenet';
+import * as posenet from 'oveddan-posenet';
 import * as React from 'react';
 import { drawKeypoints, drawSkeleton } from './util';
 

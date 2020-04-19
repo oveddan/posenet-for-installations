@@ -1,4 +1,4 @@
-import * as posenet from '@tensorflow-models/posenet';
+import * as posenet from 'oveddan-posenet';
 import * as React from 'react';
 import { IModelState } from './types';
 
@@ -39,7 +39,7 @@ export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
         flipHorizontal,
         maxDetections: this.props.maxPoseDetections,
         scoreThreshold: this.props.scoreThreshold,
-        nmsRadius: this.props.nmsRadius
+        nmsRadius: this.props.nmsRadius,
       });
 
       const { width, height } = this.props.video;

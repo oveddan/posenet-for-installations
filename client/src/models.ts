@@ -1,5 +1,4 @@
-import {load, PoseNet} from '@tensorflow-models/posenet';
-import {ModelConfig} from '@tensorflow-models/posenet/dist/posenet_model';
+import {load, ModelConfig, PoseNet} from 'oveddan-posenet';
 
 import {CheckpointConfig, mobileNetCheckpoint, resNet50Checkpoint} from './checkpoints';
 

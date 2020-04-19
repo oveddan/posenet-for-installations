@@ -9,7 +9,7 @@ import TransferWithinAStation from '@material-ui/icons/TransferWithinAStation';
 import { IControls, ICameraState, IModelState, ICameraControls, IConnectionControls, IOutputControls, IPoseEstimationControls, IConnectionState, IModelControls } from "./types";
 import { SliderControl, SwitchControl, DropDownControl } from './UI';
 import { CompactPicker, ColorResult } from 'react-color';
-import * as posenet from '@tensorflow-models/posenet';
+import * as posenet from 'oveddan-posenet';
 
 const styles = ({ spacing }: Theme) => createStyles({
   fab: {
