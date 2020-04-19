@@ -1,76 +1,76 @@
 import * as posenet from "oveddan-posenet";
-import * as React from 'react';
-import './App.css';
+import React, { useRef, useState, useEffect } from "react";
+import "./App.css";
 
-import { AppBar, createStyles, Grid, Theme, Toolbar, Typography, withStyles, WithStyles } from "@material-ui/core";
+import {
+  AppBar,
+  createStyles,
+  Grid,
+  Theme,
+  Toolbar,
+  Typography,
+  withStyles,
+  WithStyles,
+} from "@material-ui/core";
 import Controls from "./Controls";
 import { PoseEstimator } from "./PoseEstimator";
 import PosesRenderer from "./PosesRenderer";
-import { IAppState, IControls, IPoseMessage, } from './types'
+import {
+  IControls,
+  IPoseMessage,
+  ICameraState,
+  IConnectionState,
+  IModelState,
+} from "./types";
 import WebCamCapture from "./WebCamCapture";
-import { loadModel } from "./models";
-// import { loadModel } from './models';
+import * as models from "./models";
 
+const styles = ({ palette, spacing }: Theme) =>
+  createStyles({
+    root: {
+      flexGrow: 1,
+      height: "100%",
+    },
+    paper: {
+      padding: spacing.unit * 2,
+      textAlign: "center",
+      color: palette.text.secondary,
+      height: "100%",
+    },
+  });
 
-const styles = ({ palette, spacing }: Theme) => createStyles({
-  root: {
-    flexGrow: 1,
-    height: '100%'
+const defaultControls: IControls = {
+  camera: {
+    capture: false,
   },
-  paper: {
-    padding: spacing.unit * 2,
-    textAlign: 'center',
-    color: palette.text.secondary,
-    height: '100%'
-  },
-});
-
-const defaultAppState: IAppState = {
   connection: {
-    status: 'closed'
+    host: window.location.hostname,
+    port: "8080",
   },
-  controls: {
-    camera: {
-      capture: false
-    },
-    connection: {
-      host: window.location.hostname,
-      port: '8080'
-    },
-    output: {
-      showVideo: true,
-      showSkeleton: true,
-      showPoints: true,
-      backgroundColor: '#FFFFFF',
-      lineColor: '#00FFFF',
-      lineThickness: 5,
-      minPartConfidence: 0.1,
-      minPoseConfidence: 0.15,
-    },
-    model: {
-      architecture: "MobileNetV1",
-      modelMultiplier: 1,
-      inputResolution: 513,
-      outputStride: 16
-    },
-    poseEstimation: {
-      active: false,
-      maxPoseDetections: 5,
-      nmsRadius: 30.0,
-      scoreThreshold: 0.1,
-   },
+  output: {
+    showVideo: true,
+    showSkeleton: true,
+    showPoints: true,
+    backgroundColor: "#FFFFFF",
+    lineColor: "#00FFFF",
+    lineThickness: 5,
+    minPartConfidence: 0.1,
+    minPoseConfidence: 0.15,
   },
   model: {
-    loadingStatus: 'idle'
+    architecture: "MobileNetV1",
+    modelMultiplier: 1,
+    outputStride: 16,
   },
-  camera: {},
-  error: null,
-  fullScreen: false,
-  imageSize: {width: 0, height: 0}
+  poseEstimation: {
+    active: false,
+    maxPoseDetections: 5,
+    nmsRadius: 30.0,
+    scoreThreshold: 0.1,
+    internalResolution: "medium",
+  },
 };
 
-interface IProps extends WithStyles<typeof styles> {
-};
 const MenuBar = () => (
   <AppBar position="static" color="default">
     <Toolbar>
@@ -79,279 +79,247 @@ const MenuBar = () => (
       </Typography>
     </Toolbar>
   </AppBar>
-)
+);
 
 const EmptyContent = () => (
   <Typography>
     Start a video capture or connect to the server to start
   </Typography>
-)
+);
 
-class App extends React.Component<IProps, IAppState> {
-  public state = defaultAppState;
-  private rootRef: React.RefObject<HTMLDivElement>;
+interface IProps extends WithStyles<typeof styles> {}
 
-  constructor(props: IProps) {
-    super(props);
+const App = ({ classes }: IProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
 
-    this.rootRef = React.createRef();
-  }
+  const [controls, setControls] = useState<IControls>(defaultControls);
 
-  public componentDidMount() {
-    this.loadModel();
-  }
+  const [camera, setCamera] = useState<ICameraState>({});
 
-  public componentDidUpdate(prevProps: IProps, prevState: IAppState) {
-    // tslint:disable-next-line:no-console
-    if (prevState.controls.model !== this.state.controls.model) {
-      this.loadModel();
-    }
-  }
+  const [imageSize, setImageSize] = useState<{ width: number; height: number }>(
+    { width: 0, height: 0 }
+  );
+  const [poses, setPoses] = useState<posenet.Pose[]>();
 
-  public render() {
-    const { classes } = this.props;
+  const [connection, setConnection] = useState<IConnectionState>({
+    status: "closed",
+  });
 
-    return (
-      <div className={classes.root} ref={this.rootRef}>
-        {!this.state.model.net && (
-          <div id="loading">
-            Loading the model...
-          </div>
-          )
-        }
-
-       <WebCamCapture deviceId={this.state.controls.camera.deviceId} capture={this.state.controls.camera.capture} onLoaded={this.webCamCaptureLoaded} onError={this.onError} />
-
-        {(this.state.model.net
-          && this.state.camera.video) && (
-          <PoseEstimator
-            model={this.state.model}
-            video={this.state.camera.video}
-            {...this.state.controls.poseEstimation}
-            onPosesEstimated={this.posesEstimated}
-          />
-        )}
-
-        {!this.state.fullScreen && (
-          <MenuBar />
-        )}
-
-        <Grid
-          container
-          justify="center"
-            direction="row"
-          alignItems="stretch"
-          style={{height: '95%'}}
-       >
-          <Grid item xs={12} md={8}
-            direction="row"
-            alignItems="stretch"
-            >
-              {(this.state.camera.video || this.state.connection.socket) && (
-                <PosesRenderer
-                  poses={this.state.poses}
-                  video={this.state.camera.video}
-                  imageSize={this.state.imageSize}
-                  {...this.state.controls.output}
-                />
-              )}
-              {(!this.state.camera.video && !this.state.connection.socket) && (
-                <EmptyContent />
-              )}
-          </Grid>
-       </Grid>
-      {!this.state.fullScreen && (
-        <Controls
-          controls={this.state.controls}
-          updateControls={this.updateControls}
-          connection={this.state.connection}
-          connect={this.connectToSocket}
-          disconnect={this.disconnectFromSocket}
-          model={this.state.model}
-          camera={this.state.camera}
-          setVideoDevices={this.setVideoDevices}
-          poses={this.state.poses}
-          goFullScreen={this.goFullScreen}
-        />
-      )}
-       </div>
-    );
-  }
-
-  private updateControls = (controls: IControls) =>
-    this.setState({controls});
-
-  private webCamCaptureLoaded = (video?: HTMLVideoElement) => {
-    const { width, height } = video || this.state.imageSize;
-    this.setState(prevState => ({
-      camera: {
-        ...prevState.camera,
-        video,
-      },
-      imageSize: { width, height }
+  const webCamCaptureLoaded = (video?: HTMLVideoElement) => {
+    const { width, height } = video || imageSize;
+    setCamera((prevState) => ({
+      ...prevState,
+      video,
     }));
-  }
+    setImageSize({ width, height });
+  };
 
-  private onError = (error: string) =>
-    this.setState({error});
+  const [error, onError] = useState<string | null>(null);
 
-  private setVideoDevices = (devices: MediaDeviceInfo[]) => {
-    this.setState(prevState => ({
-      camera: {
-        ...prevState.camera,
-        devices
-      }}));
+  const setVideoDevices = (devices: MediaDeviceInfo[]) => {
+    setCamera((prevState) => ({
+      ...prevState,
+      devices,
+    }));
 
-     if (devices.length > 0) {
-      this.setState(prevState => ({
-        controls: {
-          ...prevState.controls,
-          camera: {
-            ...prevState.controls.camera,
-            deviceId: devices[0].deviceId
-          }
-        }
+    if (devices.length > 0) {
+      setControls((prevState) => ({
+        ...prevState,
+        camera: {
+          ...prevState.camera,
+          deviceId: devices[0].deviceId,
+        },
       }));
     }
-  }
+  };
 
-  private posesEstimated = (poses: posenet.Pose[], imageSize: {width: number, height: number}) => {
-    this.setState({poses, imageSize});
+  const posesEstimated = (
+    poses: posenet.Pose[],
+    imageSize: { width: number; height: number }
+  ) => {
+    setPoses(poses);
+    setImageSize(imageSize);
 
-    const { camera : { video }, connection: { socket, status } } = this.state;
+    const { video } = camera;
+    const { socket, status } = connection;
 
     if (socket && video && status === "open") {
       const message: IPoseMessage = {
         poses,
-        image: {width: video.width, height: video.height}
+        image: { width: video.width, height: video.height },
       };
       socket.send(JSON.stringify(message));
     }
-  }
+  };
 
-  private disconnectFromSocket = () => {
-    const existingSocket = this.state.connection.socket
+  const disconnectFromSocket = () => {
+    const { socket: existingSocket } = connection;
     if (existingSocket) {
       existingSocket.close();
 
-      existingSocket.removeEventListener('open', this.updateSocketStatus);
-      existingSocket.removeEventListener('close', this.updateSocketStatus);
-      existingSocket.removeEventListener('message', this.socketMessageReceived);
+      existingSocket.removeEventListener("open", updateSocketStatus);
+      existingSocket.removeEventListener("close", updateSocketStatus);
+      existingSocket.removeEventListener("message", socketMessageReceived);
     }
 
-    this.setState({
-      connection: {
-        status: 'closed'
-      }
+    setConnection({
+      status: "closed",
     });
-  }
+  };
 
-  private connectToSocket = () => {
-    const { host, port } = this.state.controls.connection;
+  const updateSocketStatus = () => {
+    const { socket } = connection;
+    if (!socket) {
+      return;
+    }
+    if (socket.readyState === socket.OPEN) {
+      setConnection({
+        socket,
+        status: "open",
+      });
+    } else if (socket.readyState === socket.CLOSED) {
+      setConnection({
+        socket,
+        status: "closed",
+      });
+    }
+  };
+
+  const connectToSocket = () => {
+    const { host, port } = controls.connection;
 
     if (host) {
-      this.disconnectFromSocket();
+      disconnectFromSocket();
 
       const socket = new WebSocket(`ws://${host}:${port}`);
 
-      socket.addEventListener('open', this.updateSocketStatus);
-      socket.addEventListener('error', this.updateSocketStatus);
-      socket.addEventListener('close', this.updateSocketStatus);
+      socket.addEventListener("open", updateSocketStatus);
+      socket.addEventListener("error", updateSocketStatus);
+      socket.addEventListener("close", updateSocketStatus);
 
-      this.setState({
-        connection: {
-          socket,
-          status: 'connecting'
-        }
+      setConnection({
+        socket,
+        status: "connecting",
       });
 
-      socket.addEventListener('message', this.socketMessageReceived);
+      socket.addEventListener("message", socketMessageReceived);
     }
-  }
+  };
 
-  private socketMessageReceived = (ev: MessageEvent) => {
+  const socketMessageReceived = (ev: MessageEvent) => {
     // tslint:disable-next-line:no-console
     const { poses, image } = JSON.parse(ev.data) as IPoseMessage;
 
-    this.setState({poses, imageSize: image});
-  }
+    setPoses(poses);
+    setImageSize(image);
+  };
 
-  private updateSocketStatus = () => {
-    const { socket } = this.state.connection;
-    if (!socket) { return };
-    if (socket.readyState === socket.OPEN) {
-      this.setState({
-        connection : {
-          socket,
-          status: 'open'
-        }
-      })
+  const [fullScreen, setFullScreen] = useState<boolean>(false);
+
+  const exitFullScreen = () => {
+    setFullScreen(false);
+
+    if (rootRef.current) {
+      rootRef.current.removeEventListener("touchstart", exitFullScreen);
+      rootRef.current.removeEventListener("click", exitFullScreen);
     }
-    else if (socket.readyState === socket.CLOSED) {
-      this.setState({
-        connection : {
-          socket,
-          status: 'closed'
-        }
+  };
+
+  const goFullScreen = () => {
+    setFullScreen(true);
+
+    if (rootRef.current) {
+      rootRef.current.addEventListener("touchstart", exitFullScreen);
+      rootRef.current.addEventListener("click", exitFullScreen);
+    }
+  };
+
+  const [model, setModel] = useState<IModelState>({ loadingStatus: "idle" });
+
+  useEffect(() => {
+    const loadModel = async () => {
+      const net = await models.loadModel(controls.model);
+
+      setModel({
+        ...model,
+        net,
+        loadingStatus: "loaded",
       });
-    }
-  }
+    };
 
-  private goFullScreen = () => {
-    this.setState({
-      fullScreen: true
-    })
-
-    if (this.rootRef.current) {
-      this.rootRef.current.addEventListener("touchstart", this.exitFullScreen);
-      this.rootRef.current.addEventListener("click", this.exitFullScreen);
-    }
-  }
-
-  private exitFullScreen = () => {
-    this.setState({
-      fullScreen: false
-    })
-
-    if (this.rootRef.current) {
-      this.rootRef.current.removeEventListener("touchstart", this.exitFullScreen);
-      this.rootRef.current.removeEventListener("click", this.exitFullScreen);
-    }
-  }
-
-  private loadModel = async () => {
-    // tslint:disable-next-line:no-debugger
-    if (this.state.model.loadingStatus === 'loading') {
+    if (model.loadingStatus === "loading") {
       return;
     }
 
-    // tslint:disable-next-line:no-console
-    console.log('loading the model...');
-
-    this.setState(prevState => ({
+    setModel((prevState) => ({
       ...prevState,
-      model: {
-        ...prevState.model,
-        loadingStatus: "loading"
-      }
+      loadingStatus: "loading",
     }));
-    // Load the PoseNet model weights with architecture 0.75
-    if (this.state.model.net) {
-      this.state.model.net.dispose();
+
+    if (model.net) {
+      model.net.dispose();
     }
 
-    const net = await loadModel(this.state.controls.model);
+    loadModel();
+  }, [model.loadingStatus, controls.model]);
 
-    this.setState({
-      model: {
-        ...this.state.model,
-        net,
-        loadingStatus: "loaded"
-      }
-    });
+  return (
+    <div className={classes.root} ref={rootRef}>
+      {!model.net && <div id="loading">Loading the model...</div>}
 
+      <WebCamCapture
+        deviceId={controls.camera.deviceId}
+        capture={controls.camera.capture}
+        onLoaded={webCamCaptureLoaded}
+        onError={onError}
+      />
 
-  }
-}
+      {model.net && camera.video && (
+        <PoseEstimator
+          model={model}
+          video={camera.video}
+          {...controls.poseEstimation}
+          onPosesEstimated={posesEstimated}
+        />
+      )}
+
+      {!fullScreen && <MenuBar />}
+
+      <Grid
+        container
+        justify="center"
+        direction="row"
+        alignItems="stretch"
+        style={{ height: "95%" }}
+      >
+        <Grid item xs={12} md={8} direction="row" alignItems="stretch">
+          {(camera.video || connection.socket) && (
+            <PosesRenderer
+              poses={poses}
+              video={camera.video}
+              imageSize={imageSize}
+              {...controls.output}
+            />
+          )}
+          {!camera.video && !connection.socket && <EmptyContent />}
+        </Grid>
+      </Grid>
+      {!fullScreen && (
+        <Controls
+          controls={controls}
+          updateControls={setControls}
+          connection={connection}
+          connect={connectToSocket}
+          disconnect={disconnectFromSocket}
+          model={model}
+          camera={camera}
+          setVideoDevices={setVideoDevices}
+          poses={poses}
+          goFullScreen={goFullScreen}
+        />
+      )}
+    </div>
+  );
+};
 
 export default withStyles(styles)(App);

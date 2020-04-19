@@ -1,53 +1,52 @@
-import * as posenet from 'oveddan-posenet';
-import * as React from 'react';
-import { IModelState } from './types';
-
+import * as posenet from "oveddan-posenet";
+import React, { useEffect, useState, useRef } from "react";
+import { IModelState } from "./types";
 
 interface IPoseEstimatorProps {
-  model: IModelState,
-  video: HTMLVideoElement,
-  active: boolean,
-  maxPoseDetections: number,
-  scoreThreshold: number,
-  nmsRadius: number,
-  onPosesEstimated: (poses: posenet.Pose[], imageSize: {width: number, height: number}) => void
+  model: IModelState;
+  video: HTMLVideoElement;
+  active: boolean;
+  maxPoseDetections: number;
+  scoreThreshold: number;
+  nmsRadius: number;
+  onPosesEstimated: (
+    poses: posenet.Pose[],
+    imageSize: { width: number; height: number }
+  ) => void;
 }
 
 const flipHorizontal = true;
 
-export class PoseEstimator extends React.Component<IPoseEstimatorProps> {
-  private mounted?: boolean
+export const PoseEstimator = (props: IPoseEstimatorProps) => {
+  const requestRef = useRef<number>();
 
-  public componentDidMount() {
-    this.mounted = true;
-    this.poseDetectionFrame();
-  }
-
-  public componentWillUnmount() {
-    this.mounted = false;
-  }
-
-  public render() {
-    return null;
-  }
-
-  private poseDetectionFrame = async () => {
-    const { active, model: { net, loadingStatus }}  = this.props;
+  const poseDetectionFrame = async () => {
+    const {
+      active,
+      model: { net, loadingStatus },
+    } = props;
 
     if (net && active && loadingStatus === "loaded") {
-      const poses = await net.estimateMultiplePoses(this.props.video, {
+      const poses = await net.estimateMultiplePoses(props.video, {
         flipHorizontal,
-        maxDetections: this.props.maxPoseDetections,
-        scoreThreshold: this.props.scoreThreshold,
-        nmsRadius: this.props.nmsRadius,
+        maxDetections: props.maxPoseDetections,
+        scoreThreshold: props.scoreThreshold,
+        nmsRadius: props.nmsRadius,
       });
 
-      const { width, height } = this.props.video;
-      this.props.onPosesEstimated(poses, { width, height });
-   }
-
-    if (this.mounted) {
-      requestAnimationFrame(this.poseDetectionFrame);
+      const { width, height } = props.video;
+      props.onPosesEstimated(poses, { width, height });
     }
-  }
-}
+
+    requestRef.current = requestAnimationFrame(poseDetectionFrame);
+  };
+
+  useEffect(() => {
+    requestRef.current = requestAnimationFrame(poseDetectionFrame);
+
+    return () => {
+      if (typeof requestRef.current !== "undefined")
+        cancelAnimationFrame(requestRef.current);
+    };
+  }, []);
+};
