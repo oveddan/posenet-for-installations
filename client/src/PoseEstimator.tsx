@@ -1,5 +1,5 @@
 import * as posenet from "oveddan-posenet";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { IModelState } from "./types";
 
 interface IPoseEstimatorProps {
@@ -17,28 +17,44 @@ interface IPoseEstimatorProps {
 
 const flipHorizontal = true;
 
-export const PoseEstimator = (props: IPoseEstimatorProps) => {
+export const PoseEstimator = ({
+  active,
+  model: { net, loadingStatus },
+  video,
+  maxPoseDetections,
+  scoreThreshold,
+  nmsRadius,
+  onPosesEstimated,
+}: IPoseEstimatorProps) => {
   const requestRef = useRef<number>();
 
-  const poseDetectionFrame = async () => {
-    const {
-      active,
-      model: { net, loadingStatus },
-    } = props;
-
+  const estimatePoses = useCallback(async () => {
     if (net && active && loadingStatus === "loaded") {
-      const poses = await net.estimateMultiplePoses(props.video, {
+      const poses = await net.estimateMultiplePoses(video, {
         flipHorizontal,
-        maxDetections: props.maxPoseDetections,
-        scoreThreshold: props.scoreThreshold,
-        nmsRadius: props.nmsRadius,
+        maxDetections: maxPoseDetections,
+        scoreThreshold: scoreThreshold,
+        nmsRadius: nmsRadius,
       });
 
-      const { width, height } = props.video;
-      props.onPosesEstimated(poses, { width, height });
+      const { width, height } = video;
+      onPosesEstimated(poses, { width, height });
     }
+  }, [
+    net,
+    active,
+    loadingStatus,
+    video,
+    maxPoseDetections,
+    scoreThreshold,
+    nmsRadius,
+    onPosesEstimated,
+  ]);
 
-    requestRef.current = requestAnimationFrame(poseDetectionFrame);
+  const poseDetectionFrame = async () => {
+    await estimatePoses();
+
+    requestAnimationFrame(poseDetectionFrame);
   };
 
   useEffect(() => {
@@ -48,5 +64,7 @@ export const PoseEstimator = (props: IPoseEstimatorProps) => {
       if (typeof requestRef.current !== "undefined")
         cancelAnimationFrame(requestRef.current);
     };
-  }, []);
+  });
+
+  return null;
 };

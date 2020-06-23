@@ -1,4 +1,5 @@
 import * as posenet from "oveddan-posenet";
+import { PoseNetArchitecture } from "oveddan-posenet/dist/types";
 
 export type OutputStride = 8 | 16 | 32;
 

@@ -52,7 +52,7 @@ const WebCamCapture = (props: IWebCamCaptureProps) => {
         stopCapture();
       }
     }
-  }, [capturing, props.capture]);
+  }, [capturing, props.capture, captureVideo, stopCapture]);
 
   return <video playsInline className="video" ref={videoRef} />;
 };

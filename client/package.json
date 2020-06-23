@@ -17,11 +17,13 @@
     "@types/react-dom": "^16.9.0",
     "oveddan-posenet": "^2.3.0",
     "react": "^16.13.1",
+    "react-color": "^2.18.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
     "typescript": "~3.7.2"
   },
   "devDependencies": {
+    "@types/react-color": "^3.0.2",
     "husky": "^4.2.5",
     "lint-staged": "^10.1.5",
     "nexe": "^2.0.0-rc.34",
