@@ -18,9 +18,26 @@ function saveFile(downloadStream, fileName) {
   const file = fs.createWriteStream(fileName);
 
   return new Promise((resolve, reject) => {
-    const pipe = downloadStream.pipe(createGunzip()).pipe(file);
+    let pipe;
+
+    switch (downloadStream.headers['content-encoding']) {
+      case 'gzip':
+        pipe = downloadStream.pipe(zlib.createGunzip());
+        break;
+      case 'deflate':
+        pipe = downloadStream.pipe(zlib.createInflate());
+        break;
+      default:
+        pipe = downloadStream;
+        break;
+    }
 
     pipe.on('close', resolve);
+    pipe.on('error', err => {
+      reject(err)
+    });
+
+    pipe.pipe(file);
   })
 }
 
