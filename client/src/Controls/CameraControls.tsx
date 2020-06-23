@@ -94,7 +94,6 @@ const CameraControls = ({
   return (
     <span>
       <Button
-        variant="fab"
         color={buttonColor}
         aria-label="Connect"
         className={classes.button}

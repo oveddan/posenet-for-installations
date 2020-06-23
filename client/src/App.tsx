@@ -32,7 +32,7 @@ const styles = ({ palette, spacing }: Theme) =>
       height: "100%",
     },
     paper: {
-      padding: spacing.unit * 2,
+      padding: 2,
       textAlign: "center",
       color: palette.text.secondary,
       height: "100%",
@@ -74,7 +74,7 @@ const defaultControls: IControls = {
 const MenuBar = () => (
   <AppBar position="static" color="default">
     <Toolbar>
-      <Typography variant="title" color="inherit">
+      <Typography variant="h1" color="inherit">
         PoseNet
       </Typography>
     </Toolbar>

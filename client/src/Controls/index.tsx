@@ -93,7 +93,6 @@ const Controls = ({
       )}
       {(camera.video || poses) && (
         <Button
-          variant="fab"
           aria-label="Go Full Screen"
           className={classes.button}
           onClick={goFullScreen}

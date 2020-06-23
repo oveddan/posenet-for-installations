@@ -9,10 +9,10 @@ const styles = ({ spacing }: Theme) =>
       textAlign: "center",
     },
     button: {
-      margin: spacing.unit,
+      margin: 2,
     },
     extendedIcon: {
-      marginRight: spacing.unit,
+      marginRight: 2,
     },
   });
 

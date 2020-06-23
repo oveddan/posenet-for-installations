@@ -8,8 +8,8 @@ import {
   FormGroup,
   Switch,
   Typography,
+  Slider,
 } from "@material-ui/core";
-import { Slider } from "@material-ui/lab";
 import * as React from "react";
 
 interface IDropDownControlProps<T, K extends keyof T> {
@@ -71,7 +71,7 @@ export class DropDownControl<T, K extends keyof T> extends React.Component<
     }
   };
 
-  private handleChanged = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  private handleChanged = (event: React.ChangeEvent<{ value: unknown }>) => {
     // tslint:disable-next-line:no-debugger
     this.props.updateControls(this.props.controlKey, event.target.value);
   };

@@ -54,7 +54,6 @@ const OutputControls = (props: IOutputControlsProps) => {
   return (
     <span>
       <Button
-        variant="fab"
         aria-label="Estimate"
         className={classes.button}
         onClick={openDialog}

@@ -180,7 +180,6 @@ const PoseEstimationControls = ({
   return (
     <span>
       <Button
-        variant="fab"
         color={poseEstimationControls.active ? "primary" : undefined}
         aria-label="Estimate"
         className={classes.button}

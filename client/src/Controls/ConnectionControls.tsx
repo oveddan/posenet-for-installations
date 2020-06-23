@@ -41,7 +41,6 @@ class ConnectionControls extends React.Component<
     return (
       <span>
         <Button
-          variant="fab"
           color={status === "open" ? "primary" : undefined}
           aria-label="Connect"
           className={classes.button}
