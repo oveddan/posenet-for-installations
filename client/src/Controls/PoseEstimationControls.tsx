@@ -25,6 +25,7 @@ interface IPoseEstimationControlsProps extends WithStyles<typeof styles> {
   poseEstimationControls: IPoseEstimationControls;
   modelControls: IModelControls;
   model: IModelState;
+  loadModel: (modelControls: IModelControls) => void;
   updateControls: (
     key: keyof IControls,
     controls: IPoseEstimationControls | IModelControls
@@ -65,6 +66,7 @@ const PoseEstimationControls = ({
   modelControls,
   poseEstimationControls,
   model: { loadingStatus },
+  loadModel,
   classes,
   updateControls,
 }: IPoseEstimationControlsProps) => {
@@ -104,6 +106,14 @@ const PoseEstimationControls = ({
     setOpen(false);
   }, []);
 
+  const updateModelControls = useCallback(
+    (newControls: IModelControls) => {
+      loadModel(newControls);
+      updateControls("model", newControls);
+    },
+    [loadModel, updateControls]
+  );
+
   const updateArchitecture = useCallback(
     (key: keyof IModelControls, newArchitecture: string) => {
       const validMultipler = getValidModelMulitplier(
@@ -122,26 +132,25 @@ const PoseEstimationControls = ({
         architecture: newArchitecture as PoseNetArchitecture,
       };
 
-      updateControls("model", newControls);
+      updateModelControls(newControls);
     },
-    [modelControls, updateControls]
+    [modelControls, updateModelControls]
   );
-
-  const updateModelControls = useCallback(
+  const updatePropertyOfModelControls = useCallback(
     (key: keyof IModelControls, value: any) => {
       const newControls: IModelControls = {
         ...modelControls,
         [key]: value,
       };
 
-      updateControls("model", newControls);
+      updateModelControls(newControls);
     },
-    [modelControls, updateControls]
+    [modelControls, updateModelControls]
   );
 
   const updateModelMultiplier = useCallback(
     (key: keyof IModelControls, multiplier: string) => {
-      updateModelControls(
+      updatePropertyOfModelControls(
         key,
         getValidModelMulitplier(
           +multiplier as posenet.MobileNetMultiplier,
@@ -149,12 +158,12 @@ const PoseEstimationControls = ({
         )
       );
     },
-    [updateModelControls, modelControls.architecture]
+    [updatePropertyOfModelControls, modelControls.architecture]
   );
 
   const updateOutputStride = useCallback(
     (key: keyof IModelControls, outputStride: string) => {
-      updateModelControls(
+      updatePropertyOfModelControls(
         key,
         getValidStride(
           +outputStride as OutputStride,
@@ -162,7 +171,7 @@ const PoseEstimationControls = ({
         )
       );
     },
-    [updateModelControls, modelControls.architecture]
+    [updatePropertyOfModelControls, modelControls.architecture]
   );
 
   const updatePoseEstimationControls = useCallback(

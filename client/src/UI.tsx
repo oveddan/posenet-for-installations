@@ -37,7 +37,7 @@ export class DropDownControl<T, K extends keyof T> extends React.Component<
           onChange={this.handleChanged}
           inputProps={{
             name: this.props.controlKey,
-            id: this.props.controlKey,
+            id: String(this.props.controlKey),
           }}
         >
           {this.props.noneOption && (
@@ -73,7 +73,10 @@ export class DropDownControl<T, K extends keyof T> extends React.Component<
 
   private handleChanged = (event: React.ChangeEvent<{ value: unknown }>) => {
     // tslint:disable-next-line:no-debugger
-    this.props.updateControls(this.props.controlKey, event.target.value);
+    this.props.updateControls(
+      this.props.controlKey,
+      event.target.value as string
+    );
   };
 }
 
@@ -185,8 +188,8 @@ export const SliderControl = <T, K extends keyof T>({
   const value = controls[controlKey];
 
   const handleChanged = React.useCallback(
-    (event: React.ChangeEvent<{}>, value: number) => {
-      updateControls(controlKey, value);
+    (event: any, value: number | number[]) => {
+      updateControls(controlKey, value as number);
     },
     [controlKey, updateControls]
   );

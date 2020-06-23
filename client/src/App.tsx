@@ -1,5 +1,5 @@
 import * as posenet from "oveddan-posenet";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import "./App.css";
 
 import {
@@ -21,6 +21,7 @@ import {
   ICameraState,
   IConnectionState,
   IModelState,
+  IModelControls,
 } from "./types";
 import WebCamCapture from "./WebCamCapture";
 import * as models from "./models";
@@ -67,14 +68,14 @@ const defaultControls: IControls = {
     maxPoseDetections: 5,
     nmsRadius: 30.0,
     scoreThreshold: 0.1,
-    internalResolution: "medium",
+    internalResolution: 0.5,
   },
 };
 
 const MenuBar = () => (
   <AppBar position="static" color="default">
     <Toolbar>
-      <Typography variant="h1" color="inherit">
+      <Typography variant="h2" color="inherit">
         PoseNet
       </Typography>
     </Toolbar>
@@ -116,7 +117,7 @@ const App = ({ classes }: IProps) => {
 
   const [error, onError] = useState<string | null>(null);
 
-  const setVideoDevices = (devices: MediaDeviceInfo[]) => {
+  const setVideoDevices = useCallback((devices: MediaDeviceInfo[]) => {
     setCamera((prevState) => ({
       ...prevState,
       devices,
@@ -131,44 +132,28 @@ const App = ({ classes }: IProps) => {
         },
       }));
     }
-  };
+  }, []);
 
-  const posesEstimated = (
-    poses: posenet.Pose[],
-    imageSize: { width: number; height: number }
-  ) => {
-    setPoses(poses);
-    setImageSize(imageSize);
+  const { video } = camera;
+  const { socket, status } = connection;
 
-    const { video } = camera;
-    const { socket, status } = connection;
+  const posesEstimated = useCallback(
+    (poses: posenet.Pose[], imageSize: { width: number; height: number }) => {
+      setPoses(poses);
+      setImageSize(imageSize);
 
-    if (socket && video && status === "open") {
-      const message: IPoseMessage = {
-        poses,
-        image: { width: video.width, height: video.height },
-      };
-      socket.send(JSON.stringify(message));
-    }
-  };
+      if (socket && video && status === "open") {
+        const message: IPoseMessage = {
+          poses,
+          image: { width: video.width, height: video.height },
+        };
+        socket.send(JSON.stringify(message));
+      }
+    },
+    [video, socket, status]
+  );
 
-  const disconnectFromSocket = () => {
-    const { socket: existingSocket } = connection;
-    if (existingSocket) {
-      existingSocket.close();
-
-      existingSocket.removeEventListener("open", updateSocketStatus);
-      existingSocket.removeEventListener("close", updateSocketStatus);
-      existingSocket.removeEventListener("message", socketMessageReceived);
-    }
-
-    setConnection({
-      status: "closed",
-    });
-  };
-
-  const updateSocketStatus = () => {
-    const { socket } = connection;
+  const updateSocketStatus = useCallback(() => {
     if (!socket) {
       return;
     }
@@ -183,11 +168,44 @@ const App = ({ classes }: IProps) => {
         status: "closed",
       });
     }
-  };
+  }, [socket]);
 
-  const connectToSocket = () => {
-    const { host, port } = controls.connection;
+  const { host, port } = controls.connection;
 
+  const socketMessageReceived = useCallback((ev: MessageEvent) => {
+    // tslint:disable-next-line:no-console
+    const { poses, image } = JSON.parse(ev.data) as IPoseMessage;
+
+    setPoses(poses);
+    setImageSize(image);
+  }, []);
+
+  const disconnectFromSocket = useCallback(() => {
+    if (socket) {
+      socket.close();
+
+      socket.removeEventListener("open", updateSocketStatus);
+      socket.removeEventListener("close", updateSocketStatus);
+      socket.removeEventListener("message", socketMessageReceived);
+    }
+
+    setConnection({
+      status: "closed",
+    });
+  }, [socket, updateSocketStatus, socketMessageReceived]);
+
+  const [fullScreen, setFullScreen] = useState<boolean>(false);
+
+  const exitFullScreen = useCallback(() => {
+    setFullScreen(false);
+
+    if (rootRef.current) {
+      rootRef.current.removeEventListener("touchstart", exitFullScreen);
+      rootRef.current.removeEventListener("click", exitFullScreen);
+    }
+  }, []);
+
+  const connectToSocket = useCallback(() => {
     if (host) {
       disconnectFromSocket();
 
@@ -204,64 +222,50 @@ const App = ({ classes }: IProps) => {
 
       socket.addEventListener("message", socketMessageReceived);
     }
-  };
+  }, [
+    host,
+    port,
+    disconnectFromSocket,
+    socketMessageReceived,
+    updateSocketStatus,
+  ]);
 
-  const socketMessageReceived = (ev: MessageEvent) => {
-    // tslint:disable-next-line:no-console
-    const { poses, image } = JSON.parse(ev.data) as IPoseMessage;
-
-    setPoses(poses);
-    setImageSize(image);
-  };
-
-  const [fullScreen, setFullScreen] = useState<boolean>(false);
-
-  const exitFullScreen = () => {
-    setFullScreen(false);
-
-    if (rootRef.current) {
-      rootRef.current.removeEventListener("touchstart", exitFullScreen);
-      rootRef.current.removeEventListener("click", exitFullScreen);
-    }
-  };
-
-  const goFullScreen = () => {
+  const goFullScreen = useCallback(() => {
     setFullScreen(true);
 
     if (rootRef.current) {
       rootRef.current.addEventListener("touchstart", exitFullScreen);
       rootRef.current.addEventListener("click", exitFullScreen);
     }
-  };
+  }, [exitFullScreen]);
 
   const [model, setModel] = useState<IModelState>({ loadingStatus: "idle" });
 
-  useEffect(() => {
-    const loadModel = async () => {
-      const net = await models.loadModel(controls.model);
+  const { loadingStatus, net } = model;
+
+  const loadModel = useCallback(
+    (modelConrols: IModelControls) => {
+      if (loadingStatus === "loading") {
+        return;
+      }
 
       setModel({
-        ...model,
-        net,
-        loadingStatus: "loaded",
+        loadingStatus: "loading",
       });
-    };
 
-    if (model.loadingStatus === "loading") {
-      return;
-    }
+      if (net) net.dispose();
 
-    setModel((prevState) => ({
-      ...prevState,
-      loadingStatus: "loading",
-    }));
+      (async () => {
+        const newNet = await models.loadModel(modelConrols);
 
-    if (model.net) {
-      model.net.dispose();
-    }
-
-    loadModel();
-  }, [model, controls.model]);
+        setModel({
+          net: newNet,
+          loadingStatus: "loaded",
+        });
+      })();
+    },
+    [net, loadingStatus]
+  );
 
   return (
     <div className={classes.root} ref={rootRef}>
@@ -312,6 +316,7 @@ const App = ({ classes }: IProps) => {
           connect={connectToSocket}
           disconnect={disconnectFromSocket}
           model={model}
+          loadModel={loadModel}
           camera={camera}
           setVideoDevices={setVideoDevices}
           poses={poses}

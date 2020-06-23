@@ -3,6 +3,7 @@ import {
   IConnectionState,
   ICameraState,
   IModelState,
+  IModelControls,
 } from "../types";
 import { WithStyles, withStyles } from "@material-ui/core/styles";
 import styles from "./styles";
@@ -30,6 +31,7 @@ interface IControlProps extends WithStyles<typeof styles> {
   disconnect: () => void;
   goFullScreen: () => void;
   updateControls: (controls: IControls) => void;
+  loadModel: (modelControls: IModelControls) => void;
   setVideoDevices: (devices: MediaDeviceInfo[]) => void;
 }
 
@@ -41,6 +43,7 @@ const Controls = ({
   setVideoDevices,
   goFullScreen,
   model,
+  loadModel,
   connection,
   classes,
   controls,
@@ -79,6 +82,7 @@ const Controls = ({
         <PoseEstimationControls
           poseEstimationControls={controls.poseEstimation}
           modelControls={controls.model}
+          loadModel={loadModel}
           updateControls={updateSubControls}
           model={model}
           classes={classes}
