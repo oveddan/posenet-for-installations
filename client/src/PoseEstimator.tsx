@@ -1,5 +1,5 @@
 import * as posenet from "oveddan-posenet";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { IModelState } from "./types";
 
 interface IPoseEstimatorProps {

@@ -188,7 +188,7 @@ export const SliderControl = <T, K extends keyof T>({
     (event: React.ChangeEvent<{}>, value: number) => {
       updateControls(controlKey, value);
     },
-    [controlKey, value, updateControls]
+    [controlKey, updateControls]
   );
 
   if (typeof value === "number") {

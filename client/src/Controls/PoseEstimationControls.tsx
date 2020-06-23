@@ -121,8 +121,10 @@ const PoseEstimationControls = ({
         outputStride: validOutputStride,
         architecture: newArchitecture as PoseNetArchitecture,
       };
+
+      updateControls("model", newControls);
     },
-    [modelControls]
+    [modelControls, updateControls]
   );
 
   const updateModelControls = useCallback(
@@ -139,23 +141,28 @@ const PoseEstimationControls = ({
 
   const updateModelMultiplier = useCallback(
     (key: keyof IModelControls, multiplier: string) => {
-      updateModelControls(key, +multiplier);
+      updateModelControls(
+        key,
+        getValidModelMulitplier(
+          +multiplier as posenet.MobileNetMultiplier,
+          modelControls.architecture
+        )
+      );
     },
-    [updateModelControls]
+    [updateModelControls, modelControls.architecture]
   );
 
   const updateOutputStride = useCallback(
     (key: keyof IModelControls, outputStride: string) => {
-      updateModelControls(key, +outputStride);
+      updateModelControls(
+        key,
+        getValidStride(
+          +outputStride as OutputStride,
+          modelControls.architecture
+        )
+      );
     },
-    [updateModelControls]
-  );
-
-  const updateInputResolution = useCallback(
-    (key: keyof IModelControls, inputResolution: string) => {
-      updateModelControls(key, +inputResolution);
-    },
-    [updateModelControls]
+    [updateModelControls, modelControls.architecture]
   );
 
   const updatePoseEstimationControls = useCallback(
@@ -206,7 +213,7 @@ const PoseEstimationControls = ({
             controlKey="architecture"
             text="Input Resolution"
             options={architectureOptions}
-            updateControls={updateModelControls}
+            updateControls={updateArchitecture}
             disabled={loadingStatus === "loading"}
           />
           <DropDownControl

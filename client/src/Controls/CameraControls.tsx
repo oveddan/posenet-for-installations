@@ -30,7 +30,7 @@ const CameraControls = ({
   classes,
 }: ICameraControlsProps) => {
   const [open, setOpen] = useState<boolean>(false);
-  const [selectedDevice, setSelectedDevice] = useState<string>();
+  // const [selectedDevice, setSelectedDevice] = useState<string>();
 
   useEffect(() => {
     (async () => {

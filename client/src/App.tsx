@@ -261,7 +261,7 @@ const App = ({ classes }: IProps) => {
     }
 
     loadModel();
-  }, [model.loadingStatus, controls.model]);
+  }, [model, controls.model]);
 
   return (
     <div className={classes.root} ref={rootRef}>

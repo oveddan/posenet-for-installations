@@ -9,7 +9,8 @@
     "server": "node dist/index.js",
     "serve": "node ./dist/index.js",
     "start": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch\" \"npm run serve\"",
-    "distribute": "node distribute.js"
+    "distribute": "node distribute.js",
+    "download-models": "ts-node ./src/download"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
@@ -19,13 +20,15 @@
     "axios": "^0.19.0",
     "mkdirp": "^0.5.1",
     "nexe": "^2.0.0-rc.34",
+    "ts-node": "^8.10.2",
     "typescript": "^3.5.3"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow/tfjs-core": "^1.2.2",
+    "@tensorflow/tfjs-core": "^2.0.1",
     "concurrently": "^3.6.1",
+    "gunzip-stream": "^1.0.1",
     "ws": "^6.0.0"
   }
 }
