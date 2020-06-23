@@ -1,5 +1,5 @@
 import * as posenet from "oveddan-posenet";
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import "./App.css";
 
 import {
@@ -266,6 +266,8 @@ const App = ({ classes }: IProps) => {
     },
     [net, loadingStatus]
   );
+
+  useEffect(() => loadModel(controls.model), []);
 
   return (
     <div className={classes.root} ref={rootRef}>
