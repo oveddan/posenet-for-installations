@@ -153,46 +153,7 @@ const App = ({ classes }: IProps) => {
     [video, socket, status]
   );
 
-  const updateSocketStatus = useCallback(() => {
-    if (!socket) {
-      return;
-    }
-    if (socket.readyState === socket.OPEN) {
-      setConnection({
-        socket,
-        status: "open",
-      });
-    } else if (socket.readyState === socket.CLOSED) {
-      setConnection({
-        socket,
-        status: "closed",
-      });
-    }
-  }, [socket]);
-
   const { host, port } = controls.connection;
-
-  const socketMessageReceived = useCallback((ev: MessageEvent) => {
-    // tslint:disable-next-line:no-console
-    const { poses, image } = JSON.parse(ev.data) as IPoseMessage;
-
-    setPoses(poses);
-    setImageSize(image);
-  }, []);
-
-  const disconnectFromSocket = useCallback(() => {
-    if (socket) {
-      socket.close();
-
-      socket.removeEventListener("open", updateSocketStatus);
-      socket.removeEventListener("close", updateSocketStatus);
-      socket.removeEventListener("message", socketMessageReceived);
-    }
-
-    setConnection({
-      status: "closed",
-    });
-  }, [socket, updateSocketStatus, socketMessageReceived]);
 
   const [fullScreen, setFullScreen] = useState<boolean>(false);
 
@@ -204,31 +165,6 @@ const App = ({ classes }: IProps) => {
       rootRef.current.removeEventListener("click", exitFullScreen);
     }
   }, []);
-
-  const connectToSocket = useCallback(() => {
-    if (host) {
-      disconnectFromSocket();
-
-      const socket = new WebSocket(`ws://${host}:${port}`);
-
-      socket.addEventListener("open", updateSocketStatus);
-      socket.addEventListener("error", updateSocketStatus);
-      socket.addEventListener("close", updateSocketStatus);
-
-      setConnection({
-        socket,
-        status: "connecting",
-      });
-
-      socket.addEventListener("message", socketMessageReceived);
-    }
-  }, [
-    host,
-    port,
-    disconnectFromSocket,
-    socketMessageReceived,
-    updateSocketStatus,
-  ]);
 
   const goFullScreen = useCallback(() => {
     setFullScreen(true);
@@ -315,8 +251,9 @@ const App = ({ classes }: IProps) => {
           controls={controls}
           updateControls={setControls}
           connection={connection}
-          connect={connectToSocket}
-          disconnect={disconnectFromSocket}
+          setConnection={setConnection}
+          setPoses={setPoses}
+          setImageSize={setImageSize}
           model={model}
           loadModel={loadModel}
           camera={camera}

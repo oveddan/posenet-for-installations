@@ -27,8 +27,9 @@ interface IControlProps extends WithStyles<typeof styles> {
   camera: ICameraState;
   model: IModelState;
   poses?: posenet.Pose[];
-  connect: () => void;
-  disconnect: () => void;
+  setConnection: (connection: IConnectionState) => void;
+  setPoses: (poses: posenet.Pose[]) => void;
+  setImageSize: (imageSize: { width: number; height: number }) => void;
   goFullScreen: () => void;
   updateControls: (controls: IControls) => void;
   loadModel: (modelControls: IModelControls) => void;
@@ -38,8 +39,7 @@ interface IControlProps extends WithStyles<typeof styles> {
 const Controls = ({
   poses,
   camera,
-  connect,
-  disconnect,
+  setConnection,
   setVideoDevices,
   goFullScreen,
   model,
@@ -48,6 +48,8 @@ const Controls = ({
   classes,
   controls,
   updateControls,
+  setPoses,
+  setImageSize,
 }: IControlProps) => {
   const updateSubControls: updateSubControls = (
     key: keyof IControls,
@@ -65,10 +67,11 @@ const Controls = ({
     <div className={classes.fab}>
       <ConnectionControls
         connection={connection}
+        setConnection={setConnection}
         controls={controls.connection}
         updateControls={updateSubControls}
-        connect={connect}
-        disconnect={disconnect}
+        setPoses={setPoses}
+        setImageSize={setImageSize}
         classes={classes}
       />
       <CameraControls
