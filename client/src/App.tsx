@@ -76,7 +76,7 @@ const MenuBar = () => (
   <AppBar position="static" color="default">
     <Toolbar>
       <Typography variant="h2" color="inherit">
-        PoseNet
+        PoseNet Streamer
       </Typography>
     </Toolbar>
   </AppBar>
@@ -244,7 +244,7 @@ const App = ({ classes }: IProps) => {
   const { loadingStatus, net } = model;
 
   const loadModel = useCallback(
-    (modelConrols: IModelControls) => {
+    async (modelConrols: IModelControls) => {
       if (loadingStatus === "loading") {
         return;
       }
@@ -255,19 +255,19 @@ const App = ({ classes }: IProps) => {
 
       if (net) net.dispose();
 
-      (async () => {
-        const newNet = await models.loadModel(modelConrols);
+      const newNet = await models.loadModel(modelConrols);
 
-        setModel({
-          net: newNet,
-          loadingStatus: "loaded",
-        });
-      })();
+      setModel({
+        net: newNet,
+        loadingStatus: "loaded",
+      });
     },
     [net, loadingStatus]
   );
 
-  useEffect(() => loadModel(controls.model), []);
+  useEffect(() => {
+    loadModel(controls.model);
+  }, []);
 
   return (
     <div className={classes.root} ref={rootRef}>

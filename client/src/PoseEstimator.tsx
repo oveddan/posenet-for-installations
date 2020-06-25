@@ -51,20 +51,20 @@ export const PoseEstimator = ({
     onPosesEstimated,
   ]);
 
-  const poseDetectionFrame = async () => {
-    await estimatePoses();
-
-    requestAnimationFrame(poseDetectionFrame);
-  };
-
   useEffect(() => {
-    requestRef.current = requestAnimationFrame(poseDetectionFrame);
+    const poseEstimationLoop = async () => {
+      await estimatePoses();
+
+      requestRef.current = requestAnimationFrame(poseEstimationLoop);
+    };
+
+    poseEstimationLoop();
 
     return () => {
       if (typeof requestRef.current !== "undefined")
         cancelAnimationFrame(requestRef.current);
     };
-  });
+  }, [active, estimatePoses]);
 
   return null;
 };
