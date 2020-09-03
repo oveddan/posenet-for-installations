@@ -5,7 +5,7 @@
   "dependencies": {
     "clang-format": "^1.2.4",
     "concurrently": "^3.6.1",
-    "serve": "^9.6.0"
+    "serve": "^10.1.2"
   },
   "devDependencies": {
     "typescript": "^3.0.1"
