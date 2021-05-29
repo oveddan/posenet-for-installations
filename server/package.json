@@ -23,6 +23,6 @@
   "license": "ISC",
   "dependencies": {
     "concurrently": "^3.6.1",
-    "ws": "^6.0.0"
+    "ws": "^7.4.6"
   }
 }
